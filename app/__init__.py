@@ -26,6 +26,27 @@ def create_app(config_class=None):
     db.init_app(app)
     CORS(app, resources={r"/api/*": {"origins": "*"}})
 
+    from app.events import event_bus
+    from flask import request
+
+    @app.before_request
+    def log_mcp_tool():
+        tool_name = request.headers.get('X-Plano-Tool')
+        if tool_name:
+            event_bus.broadcast('mcp_tool_call', {
+                'tool': tool_name,
+                'method': request.method,
+                'path': request.path
+            })
+        
+        # Also broadcast a generic 'system_change' for any mutation
+        if request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
+            event_bus.broadcast('system_change', {
+                'method': request.method,
+                'path': request.path,
+                'tool': tool_name
+            })
+
     # JSON error handlers
     @app.errorhandler(404)
     def not_found(e):

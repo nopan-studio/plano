@@ -1,5 +1,5 @@
 """SQLAlchemy models for Plano PM system."""
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 from app import db
 
@@ -10,7 +10,7 @@ DIAGRAM_TYPES = ['process_flow', 'db_diagram', 'flowchart', 'idea_map', 'functio
 
 NODE_TYPES = {
     'process_flow': ['start', 'end', 'process', 'decision', 'io', 'connector', 'annotation'],
-    'db_diagram': ['table', 'view', 'enum', 'note'],
+    'db_diagram': ['db_table', 'enum', 'note', 'external_table'],
     'flowchart': ['start', 'end', 'process', 'decision', 'io', 'connector', 'annotation'],
     'idea_map': ['idea', 'category', 'note', 'link'],
     'function_flow': ['function', 'class', 'module', 'api_endpoint', 'event', 'callback'],
@@ -25,7 +25,7 @@ EDGE_TYPES = {
 }
 
 PROJECT_STATUSES = ['planning', 'active', 'on_hold', 'completed', 'archived']
-TASK_STATUSES = ['todo', 'in_progress', 'review', 'done']
+TASK_STATUSES = ['todo', 'in_progress', 'review', 'done', 'bugs']
 MILESTONE_STATUSES = ['pending', 'in_progress', 'completed', 'missed']
 IDEA_STATUSES = ['new', 'exploring', 'accepted', 'rejected']
 UPDATE_TYPES = ['progress', 'blocker', 'decision', 'note']
@@ -60,8 +60,8 @@ class Project(db.Model):
             start_date=self.start_date.isoformat() if self.start_date else None,
             target_date=self.target_date.isoformat() if self.target_date else None,
             progress_pct=self.progress_pct,
-            created_at=self.created_at.isoformat(),
-            updated_at=self.updated_at.isoformat(),
+            created_at=self.created_at.isoformat() + 'Z',
+            updated_at=self.updated_at.isoformat() + 'Z',
         )
         if summary:
             d['task_count'] = len(self.tasks)
@@ -95,8 +95,8 @@ class Milestone(db.Model):
             due_date=self.due_date.isoformat() if self.due_date else None,
             status=self.status,
             task_count=len(self.tasks),
-            created_at=self.created_at.isoformat(),
-            updated_at=self.updated_at.isoformat(),
+            created_at=self.created_at.isoformat() + 'Z',
+            updated_at=self.updated_at.isoformat() + 'Z',
         )
 
 
@@ -115,6 +115,8 @@ class Task(db.Model):
     estimated_hours = db.Column(db.Float, nullable=True)
     actual_hours = db.Column(db.Float, nullable=True)
     tags = db.Column(db.Text, default='[]')  # JSON array
+    files_meta = db.Column(db.Text, default='[]')  # JSON array of file info
+    is_ai_working = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -129,8 +131,10 @@ class Task(db.Model):
             estimated_hours=self.estimated_hours,
             actual_hours=self.actual_hours,
             tags=json.loads(self.tags or '[]'),
-            created_at=self.created_at.isoformat(),
-            updated_at=self.updated_at.isoformat(),
+            files_meta=json.loads(self.files_meta or '[]'),
+            is_ai_working=self.is_ai_working,
+            created_at=self.created_at.isoformat() + 'Z',
+            updated_at=self.updated_at.isoformat() + 'Z',
         )
 
 
@@ -147,6 +151,7 @@ class ChangeLog(db.Model):
     new_value = db.Column(db.Text, default='')
     changed_by = db.Column(db.String(120), default='system')
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    files_meta = db.Column(db.Text, default='[]')  # Optional associated files
 
     def to_dict(self):
         return dict(
@@ -155,7 +160,8 @@ class ChangeLog(db.Model):
             action=self.action, field_changed=self.field_changed,
             old_value=self.old_value, new_value=self.new_value,
             changed_by=self.changed_by,
-            timestamp=self.timestamp.isoformat(),
+            timestamp=self.timestamp.isoformat() + 'Z',
+            files_meta=json.loads(self.files_meta or '[]'),
         )
 
 
@@ -167,6 +173,7 @@ class Update(db.Model):
     task_id = db.Column(db.Integer, db.ForeignKey('task.id'), nullable=True)
     content = db.Column(db.Text, nullable=False)
     update_type = db.Column(db.String(32), default='progress')
+    files_meta = db.Column(db.Text, default='[]')  # JSON list
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def to_dict(self):
@@ -174,7 +181,8 @@ class Update(db.Model):
             id=self.id, project_id=self.project_id,
             task_id=self.task_id,
             content=self.content, update_type=self.update_type,
-            created_at=self.created_at.isoformat(),
+            files_meta=json.loads(self.files_meta or '[]'),
+            created_at=self.created_at.isoformat() + 'Z',
         )
 
 
@@ -197,8 +205,8 @@ class Idea(db.Model):
             title=self.title, description=self.description,
             status=self.status, votes=self.votes,
             tags=json.loads(self.tags or '[]'),
-            created_at=self.created_at.isoformat(),
-            updated_at=self.updated_at.isoformat(),
+            created_at=self.created_at.isoformat() + 'Z',
+            updated_at=self.updated_at.isoformat() + 'Z',
         )
 
 
@@ -220,8 +228,8 @@ class Diagram(db.Model):
             id=self.id, project_id=self.project_id,
             name=self.name, type=self.type,
             description=self.description,
-            created_at=self.created_at.isoformat(),
-            updated_at=self.updated_at.isoformat(),
+            created_at=self.created_at.isoformat() + 'Z',
+            updated_at=self.updated_at.isoformat() + 'Z',
             node_count=len(self.nodes),
             edge_count=len(self.edges),
         )
@@ -245,12 +253,39 @@ class Node(db.Model):
     meta = db.Column(db.Text, default='{}')
 
     def to_dict(self):
-        return dict(
+        """Convert object to dict for serialization."""
+        m = json.loads(self.meta or '{}')
+        d = dict(
             id=self.id, diagram_id=self.diagram_id,
             label=self.label, node_type=self.node_type,
             x=self.x, y=self.y, width=self.width, height=self.height,
-            meta=json.loads(self.meta or '{}'),
+            meta=m,
         )
+        if self.node_type == 'db_table':
+            # Always return a list of columns for UI (even if derived from legacy 'fields')
+            d['columns'] = self.columns
+        return d
+
+    @property
+    def columns(self):
+        """Return the list of columns for DB tables from meta."""
+        try:
+            m = json.loads(self.meta or '{}')
+            cols = m.get('columns')
+            if isinstance(cols, list):
+                # Return standard columns
+                return cols
+
+            # Migration: Check for old 'fields' string format
+            fields_str = m.get('fields')
+            if isinstance(fields_str, str) and fields_str.strip():
+                # Basic conversion: 'id, name, email' -> [{'name': 'id'}, {'name': 'name'}, {'name': 'email'}]
+                names = [f.strip() for f in fields_str.split(',') if f.strip()]
+                return [{"name": n} for n in names]
+
+            return []
+        except:
+            return []
 
 
 # ─── Edge ─────────────────────────────────────────────────────────────────────
@@ -271,3 +306,5 @@ class Edge(db.Model):
             label=self.label, edge_type=self.edge_type,
             meta=json.loads(self.meta or '{}'),
         )
+
+

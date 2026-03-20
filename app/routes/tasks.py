@@ -5,6 +5,7 @@ import json
 from app import db
 from app.models import Task, Project, TASK_STATUSES, PRIORITIES
 from app.changelog import log_change, log_field_changes
+from app.events import event_bus
 
 tasks_bp = Blueprint('tasks', __name__)
 
@@ -58,6 +59,8 @@ def create_task(pid):
         estimated_hours=body.get('estimated_hours'),
         actual_hours=body.get('actual_hours'),
         tags=json.dumps(body.get('tags', [])),
+        files_meta=json.dumps(body.get('files_meta', [])),
+        is_ai_working=bool(body.get('is_ai_working', False)),
     )
     if body.get('due_date'):
         try:
@@ -69,6 +72,10 @@ def create_task(pid):
     db.session.flush()
     log_change(pid, 'task', t.id, 'created')
     db.session.commit()
+    
+    # Broadcast creation
+    event_bus.broadcast('task_created', t.to_dict())
+    
     return ok(t.to_dict(), 201)
 
 
@@ -108,6 +115,10 @@ def update_task(pid, tid):
         t.actual_hours = body['actual_hours']
     if 'tags' in body:
         t.tags = json.dumps(body['tags'])
+    if 'files_meta' in body:
+        t.files_meta = json.dumps(body['files_meta'])
+    if 'is_ai_working' in body:
+        t.is_ai_working = bool(body['is_ai_working'])
     if 'due_date' in body:
         if body['due_date']:
             try:
@@ -121,6 +132,10 @@ def update_task(pid, tid):
     new = t.to_dict()
     log_field_changes(pid, 'task', t.id, old, new)
     db.session.commit()
+    
+    # Broadcast update
+    event_bus.broadcast('task_updated', t.to_dict())
+    
     return ok(t.to_dict())
 
 
@@ -131,4 +146,78 @@ def delete_task(pid, tid):
     log_change(pid, 'task', tid, 'deleted')
     db.session.delete(t)
     db.session.commit()
+    
+    # Broadcast deletion
+    event_bus.broadcast('task_deleted', {'id': tid, 'project_id': pid})
+    
     return ok({'deleted': True, 'id': tid})
+
+
+@tasks_bp.route('/api/projects/<int:pid>/tasks/<int:tid>/ai-status', methods=['POST'])
+def ai_status(pid, tid):
+    db.get_or_404(Project, pid)
+    t = Task.query.filter_by(id=tid, project_id=pid).first_or_404()
+    body = request.get_json(silent=True) or {}
+    
+    if 'is_ai_working' in body:
+        t.is_ai_working = bool(body['is_ai_working'])
+        t.updated_at = datetime.utcnow()
+        db.session.commit()
+        
+        # Trigger real-time event
+        event_bus.broadcast('task_updated', t.to_dict())
+        
+        return ok(t.to_dict())
+    
+    return err('is_ai_working is required')
+
+
+@tasks_bp.route('/api/projects/<int:pid>/tasks/<int:tid>/diff', methods=['GET'])
+def get_task_diff(pid, tid):
+    import subprocess
+    import os
+    db.get_or_404(Project, pid)
+    t = Task.query.filter_by(id=tid, project_id=pid).first_or_404()
+    files = json.loads(t.files_meta or '[]')
+    
+    diffs = []
+    project_root = os.getcwd() # Assumes we're running from the root
+
+    for f in files:
+        path = f.get('path')
+        action = f.get('action')
+        if not path:
+            continue
+            
+        diff_content = ""
+        try:
+            if action == 'added':
+                # For added files, show as additions. Use /dev/null as source.
+                res = subprocess.run(['git', 'diff', '--no-index', '/dev/null', path], 
+                                     capture_output=True, text=True, cwd=project_root)
+                diff_content = res.stdout
+            elif action == 'modified':
+                # Modified: current changes in working tree
+                res = subprocess.run(['git', 'diff', path], 
+                                     capture_output=True, text=True, cwd=project_root)
+                diff_content = res.stdout
+                # If no unstaged changes, try staged
+                if not diff_content.strip():
+                    res = subprocess.run(['git', 'diff', '--cached', path], 
+                                         capture_output=True, text=True, cwd=project_root)
+                    diff_content = res.stdout
+            elif action == 'deleted':
+                # Deleted: what was removed vs HEAD
+                res = subprocess.run(['git', 'diff', 'HEAD', '--', path], 
+                                     capture_output=True, text=True, cwd=project_root)
+                diff_content = res.stdout
+        except Exception as e:
+            diff_content = f"Error fetching diff: {str(e)}"
+            
+        diffs.append({
+            'path': path,
+            'action': action,
+            'diff': diff_content
+        })
+        
+    return ok(diffs)

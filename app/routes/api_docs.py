@@ -32,6 +32,7 @@ def api_docs():
                 "GET    /api/projects/:pid/tasks/:tid":   "Get task",
                 "PATCH  /api/projects/:pid/tasks/:tid":   "Update task (auto-logs changes)",
                 "DELETE /api/projects/:pid/tasks/:tid":   "Delete task",
+                "GET    /api/projects/:pid/tasks/:tid/diff": "Get code diffs for affected files",
             },
             "milestones": {
                 "GET    /api/projects/:pid/milestones":       "List milestones",

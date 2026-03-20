@@ -1,0 +1,28 @@
+# Agent Instructions
+
+This project follows an agent-friendly architecture that separates concerns between intent and execution.
+
+## The 3-Layer Architecture
+
+**Layer 1: Directive (What to do)**
+- Standard Operating Procedures (SOPs) written in Markdown, located in `directives/`.
+- Define the goals, keywords, mandatory tools, and edge cases for specific tasks.
+
+**Layer 2: Orchestration (Decision making)**
+- This is the AI Assistant (you). Your role is to read the directives and choose the right tools to execute them.
+- Always check `directives/` before performing high-level project management tasks.
+
+**Layer 3: Execution (Doing the work)**
+- Deterministic tools and scripts.
+- **Plano MCP**: The primary execution layer for project management (tasks, milestones, boards).
+- **Python Scripts**: Any custom data processing logic should live in `execution/` (if needed).
+
+## Operating Principles
+1.  **Use Plano Early & Often**: For any request regarding "progress", "status", or "tasks", immediately consult the `directives/plano_project_oversight.md`.
+2.  **Deterministic over Probabilistic**: Prefer using the Plano database as the source of truth rather than relying on session memory.
+3.  **Update Directives**: If you learn new constraints or better ways to manage the project, update the corresponding markdown file in `directives/`.
+
+## Directory Structure
+- `directives/` - Agent SOPs and tactical instructions.
+- `app/` - Core Plano application logic.
+- `mcp_server.py` - The MCP server interface for AI agents.

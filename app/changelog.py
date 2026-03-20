@@ -3,6 +3,8 @@ from app import db
 from app.models import ChangeLog
 
 
+from app.events import event_bus
+
 def log_change(project_id, entity_type, entity_id, action,
                field_changed='', old_value='', new_value='', changed_by='system'):
     """Create a ChangeLog entry for any mutation."""
@@ -17,6 +19,10 @@ def log_change(project_id, entity_type, entity_id, action,
         changed_by=changed_by,
     )
     db.session.add(entry)
+    db.session.flush() # ensure ID is set
+    
+    # Broadcast the changelog created event
+    event_bus.broadcast('changelog_created', entry.to_dict())
 
 
 def log_field_changes(project_id, entity_type, entity_id, old_dict, new_dict, changed_by='system'):

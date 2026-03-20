@@ -43,6 +43,54 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--canvas-bg);color:var(--text);font-size:13px;-webkit-font-smoothing:antialiased}
 
+/* ── MCP Indicator ── */
+#mcp-status-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 1000;
+  pointer-events: none;
+}
+.mcp-indicator {
+  background: var(--panel-bg);
+  border: 1px solid var(--accent);
+  border-radius: var(--r);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.8);
+  animation: slideIn .3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+  pointer-events: auto;
+  min-width: 240px;
+}
+@keyframes slideIn {
+  from { transform: translateX(100%) scale(0.9); opacity: 0; }
+  to { transform: translateX(0) scale(1); opacity: 1; }
+}
+.mcp-indicator .icon {
+  width: 32px;
+  height: 32px;
+  background: var(--accent-dim);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+}
+.mcp-indicator .body { flex: 1; }
+.mcp-indicator .title { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-mid); letter-spacing: .05em; }
+.mcp-indicator .tool { font-size: 13px; font-weight: 600; color: var(--text); }
+.mcp-indicator .dots { display: flex; gap: 3px; }
+.mcp-indicator .dots span { width: 4px; height: 4px; background: var(--accent); border-radius: 50%; animation: dotBlink 1.4s infinite; }
+.mcp-indicator .dots span:nth-child(2) { animation-delay: .2s; }
+.mcp-indicator .dots span:nth-child(3) { animation-delay: .4s; }
+@keyframes dotBlink { 0%, 100% { opacity: .3; } 50% { opacity: 1; } }
+
+
 /* Layout */
 #app{display:grid;grid-template-rows:54px 1fr;height:100vh}
 #topbar{display:flex;align-items:center;padding:0 14px;gap:8px;background:var(--panel-bg);border-bottom:1px solid var(--panel-border);z-index:100}
@@ -125,7 +173,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--c
 #canvas{position:absolute;top:0;left:0;transform-origin:0 0;width:5000px;height:5000px}
 #svg-layer{position:absolute;top:0;left:0;width:5000px;height:5000px;pointer-events:none;overflow:visible}
 
-.n8n-node{position:absolute;background:var(--node-bg);border:1px solid var(--node-border);border-radius:var(--r-lg);cursor:move;user-select:none;box-shadow:var(--shadow);transition:border-color .12s,box-shadow .12s;min-width:200px;max-width:260px}
+.n8n-node{position:absolute;background:var(--node-bg);border:1px solid var(--node-border);border-radius:var(--r-lg);cursor:move;user-select:none;box-shadow:var(--shadow);transition:border-color .12s,box-shadow .12s;min-width:200px;max-width:400px}
 .n8n-node:hover{border-color:#484848;box-shadow:var(--shadow),0 0 0 1px #3a3a3a}
 .n8n-node.selected{border-color:var(--accent) !important;box-shadow:var(--shadow),0 0 0 2px var(--accent-glow) !important}
 
@@ -137,13 +185,13 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--c
 
 /* DB columns inside node */
 .node-cols{border-top:1px solid var(--node-border)}
-.ncol{display:flex;align-items:center;gap:5px;padding:4px 12px;font-size:10px;font-family:'SF Mono','Consolas',monospace}
-.ncol:hover{background:var(--surface)}
-.dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
-.dot-pk{background:var(--amber)}
-.dot-fk{background:var(--teal)}
-.dot-empty{background:transparent}
-.col-n{flex:1;color:var(--text);font-weight:500}
+.ncol{display:flex;align-items:center;gap:6px;padding:6px 12px;font-size:11px;font-family:'SF Mono','Consolas',monospace; border-bottom:1px solid rgba(255,255,255,.03)}
+.ncol:last-child{border-bottom:none}
+.ncol:hover{background:rgba(255,255,255,.03)}
+.badge{font-size:8px; font-weight:800; padding:1px 4px; border-radius:3px; text-transform:uppercase; flex-shrink:0; letter-spacing:.02em}
+.badge-pk{background:var(--amber-dim); color:var(--amber); border:1px solid rgba(240,167,50,.3)}
+.badge-fk{background:var(--teal-dim); color:var(--teal); border:1px solid rgba(50,180,180,.3)}
+.col-n{flex:1;color:var(--text);font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .col-t{color:var(--text-dim);font-size:9px}
 
 /* Note node */
@@ -159,10 +207,13 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--c
 .port-r{right:-7px;top:50%;transform:translateY(-50%)}
 .port-t{top:-7px;left:50%;transform:translateX(-50%)}
 .port-b{bottom:-7px;left:50%;transform:translateX(-50%)}
-.port-l:hover{transform:translateY(-50%) scale(1.3)}
-.port-r:hover{transform:translateY(-50%) scale(1.3)}
-.port-t:hover{transform:translateX(-50%) scale(1.3)}
 .port-b:hover{transform:translateX(-50%) scale(1.3)}
+.port-row{position:absolute;width:10px;height:10px;border-radius:50%;background:var(--node-bg);border:2px solid var(--node-border);cursor:crosshair;z-index:10;opacity:0;transition:opacity .1s,transform .1s,background .1s,border-color .1s}
+.ncol:hover .port-row{opacity:1}
+.port-row:hover{background:var(--accent);border-color:var(--accent);transform:scale(1.3)}
+.port-row.l{left:-5px}
+.port-row.r{right:-5px}
+.port-row.pinned, .n8n-node:hover .port-row{opacity:1}
 
 /* Edges */
 .epath{fill:none;stroke:#484848;stroke-width:2;marker-end:url(#m-def)}
@@ -240,6 +291,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--c
 </style>
 </head>
 <body>
+<div id="mcp-status-container"></div>
 <div id="app">
 
 <!-- Topbar -->
@@ -418,11 +470,11 @@ const CAT = {
     ]},
   ],
   db_diagram: [
-    { cat:'Schema', col:'var(--purple)', nodes:[
-      {t:'table',      n:'Table',        s:'Database table',    i:'⊞', c:'var(--purple)',  b:'var(--purple-dim)'},
-      {t:'view',       n:'View',         s:'DB view',           i:'◫', c:'var(--blue)',    b:'var(--blue-dim)'},
-      {t:'enum',       n:'Enum',         s:'Enumeration',       i:'≡', c:'var(--amber)',   b:'var(--amber-dim)'},
-    ]},
+      { cat:'Schema', col:'var(--purple)', nodes:[
+        {t:'db_table',   n:'Table',        s:'Database table',    i:'⊞', c:'var(--purple)',  b:'var(--purple-dim)'},
+        {t:'enum',       n:'Enum',         s:'Enumeration',       i:'≡', c:'var(--amber)',   b:'var(--amber-dim)'},
+        {t:'external_table', n:'External Ref', s:'Table from other board', i:'📤', c:'var(--rose)', b:'var(--rose-dim)'},
+      ]},
     { cat:'Utils', col:'var(--text-dim)', nodes:[
       {t:'note',       n:'Note',         s:'Schema note',       i:'✎', c:'var(--amber)',   b:'var(--amber-dim)'},
     ]},
@@ -645,16 +697,33 @@ function renderCanvas() {
 function makeNode(n) {
   const def=getDef(n.node_type);
   const isNote=n.node_type==='annotation'||n.node_type==='note';
-  const isTab=n.node_type==='table'||n.node_type==='view';
+  const isTab=n.node_type==='db_table';
   const el=document.createElement('div');
   el.className='n8n-node'+(isNote?' is-note':''); el.id=`n-${n.id}`; el.dataset.id=n.id;
   el.style.left=n.x+'px'; el.style.top=n.y+'px'; el.style.width=(n.width||220)+'px';
   el.innerHTML=nodeHTML(n,def,isNote,isTab);
+  
+  // Header ports
   for(const s of['l','r','t','b']){
     const p=document.createElement('div');
     p.className=`port port-${s}`; p.dataset.s=s; p.dataset.ni=n.id;
     p.addEventListener('mousedown',portDown); el.appendChild(p);
   }
+  
+  // Column ports
+  if(isTab){
+    const rows = el.querySelectorAll('.ncol');
+    rows.forEach((row, i) => {
+      ['l', 'r'].forEach(s => {
+        const p = document.createElement('div');
+        p.className = `port-row ${s}`;
+        p.dataset.s = s; p.dataset.ni = n.id; p.dataset.ci = i; // Column index
+        p.addEventListener('mousedown', portDown);
+        row.appendChild(p);
+      });
+    });
+  }
+
   el.addEventListener('mousedown',nodeDown);
   el.addEventListener('click',ev=>{ if(!S.drag?.moved){ev.stopPropagation();selNode(n.id)} });
   document.getElementById('canvas').appendChild(el);
@@ -662,7 +731,7 @@ function makeNode(n) {
 
 function nodeHTML(n,def,isNote,isTab) {
   const cols=n.meta?.columns||[];
-  const subtitles={start:'Trigger',end:'End',process:'Action',decision:'Decision',io:'I / O',connector:'Connector',annotation:'Note',table:'Table',view:'View',enum:'Enum',note:'Note'};
+  const subtitles={start:'Trigger',end:'End',process:'Action',decision:'Decision',io:'I / O',connector:'Connector',annotation:'Note',db_table:'Table',enum:'Enum',note:'Note',external_table:'External Table'};
   if(isNote) return `
     <div class="note-header" style="background:transparent">
       <span style="color:${def.c}">${def.i}</span>
@@ -676,12 +745,19 @@ function nodeHTML(n,def,isNote,isTab) {
         <div class="node-title">${esc(n.label)}</div>
         <div class="node-subtitle">${subtitles[n.node_type]||n.node_type}</div>
       </div>
+      ${n.node_type==='external_table'&&n.meta?.ref_diagram_id?`
+      <div style="display:flex;align-items:center;padding-right:10px" title="Jump to Board" onclick="ev=arguments[0];ev.stopPropagation();openWf(${n.meta.ref_diagram_id})">
+        <div style="width:24px;height:24px;border-radius:4px;background:var(--rose-dim);color:var(--rose);display:flex;align-items:center;justify-content:center;cursor:pointer">➔</div>
+      </div>`:''}
     </div>
-    ${isTab&&cols.length?`<div class="node-cols">${cols.map(c=>`
-      <div class="ncol">
-        <div class="dot ${c.pk?'dot-pk':c.fk?'dot-fk':'dot-empty'}"></div>
+    ${isTab&&cols.length?`<div class="node-cols">${cols.map((c,i)=>`
+      <div class="ncol" data-name="${esc(c.name||'')}">
+        <div class="port-row l" data-s="l" data-ni="${n.id}" data-col="${i}"></div>
+        ${c.pk?`<span class="badge badge-pk" title="Primary Key">PK</span>`:''}
+        ${c.fk?`<span class="badge badge-fk" title="Foreign Key">FK</span>`:''}
         <span class="col-n">${esc(c.name||'')}</span>
         <span class="col-t">${esc(c.type||'')}</span>
+        <div class="port-row r" data-s="r" data-ni="${n.id}" data-col="${i}"></div>
       </div>`).join('')}</div>`:''}`;
 }
 
@@ -722,12 +798,61 @@ function posEdge(e) {
   const g=document.querySelector(`.eg[data-id="${e.id}"]`); if(!g) return;
   const se=document.getElementById(`n-${e.source_id}`), te=document.getElementById(`n-${e.target_id}`);
   if(!se||!te) return;
-  const sc=nc(se), tc=nc(te);
+  
+  const sc = getPortCoords(se, e.meta?.source_port, e.meta?.source_column);
+  const tc = getPortCoords(te, e.meta?.target_port, e.meta?.target_column);
+  
   const ctrl=Math.max(Math.abs(tc.x-sc.x)*0.5,80);
   const d=`M ${sc.x} ${sc.y} C ${sc.x+ctrl} ${sc.y},${tc.x-ctrl} ${tc.y},${tc.x} ${tc.y}`;
   g.querySelectorAll('path').forEach(p=>p.setAttribute('d',d));
   const lbl=g.querySelector('text');
   if(lbl){ lbl.setAttribute('x',(sc.x+tc.x)/2); lbl.setAttribute('y',(sc.y+tc.y)/2-7); lbl.setAttribute('text-anchor','middle'); lbl.textContent=e.label||'' }
+}
+
+function getPortCoords(el, portMeta, colName) {
+  // portMeta format: {side: 'l'|'r', col: index}
+  let side = portMeta?.side || (el.style.left < 500 ? 'r' : 'l'); // Default based on position if no meta
+  let rowIdx = portMeta?.col;
+
+  // If we have a column name, resolve it to an index
+  if (colName) {
+    const rows = el.querySelectorAll('.ncol');
+    for (let i = 0; i < rows.length; i++) {
+        if (rows[i].dataset.name === colName) {
+            rowIdx = i;
+            break;
+        }
+    }
+  }
+
+  if (rowIdx !== undefined) {
+    const rows = el.querySelectorAll('.ncol');
+    if (rows[rowIdx]) {
+      const row = rows[rowIdx];
+      const p = row.querySelector(`.port-row.${side === 'l' ? 'l' : 'r'}`);
+      if (p) {
+        const r = p.getBoundingClientRect();
+        const cr = document.getElementById('canvas').getBoundingClientRect();
+        return {
+          x: (r.left + r.width/2 - cr.left) / S.scale,
+          y: (r.top + r.height/2 - cr.top) / S.scale
+        };
+      }
+    }
+  }
+
+  // Fallback to standard side ports
+  const p = el.querySelector(`.port-${side}`);
+  if (p) {
+    const r = p.getBoundingClientRect();
+    const cr = document.getElementById('canvas').getBoundingClientRect();
+    return {
+      x: (r.left + r.width/2 - cr.left) / S.scale,
+      y: (r.top + r.height/2 - cr.top) / S.scale
+    };
+  }
+
+  return nc(el);
 }
 
 function nc(el){return{x:parseFloat(el.style.left)+el.offsetWidth/2,y:parseFloat(el.style.top)+el.offsetHeight/2}}
@@ -771,7 +896,18 @@ function setupCanvas() {
     if(S.pan){S.pan=false;return}
     if(S.drag?.moved){const x=parseFloat(S.drag.el.style.left),y=parseFloat(S.drag.el.style.top);await api.h(`/api/projects/${window._activePid}/boards/${S.cur.id}/nodes/${S.drag.id}`,{x,y});const nd=S.cur.nodes.find(n=>n.id===S.drag.id);if(nd){nd.x=x;nd.y=y}}
     S.drag=null;
-    if(S.conn){document.getElementById('conn-line').setAttribute('visibility','hidden');const tgt=ev.target.closest?.('.n8n-node');if(tgt&&+tgt.dataset.id!==S.conn.id) await addEdge(S.conn.id,+tgt.dataset.id);document.querySelectorAll('.port').forEach(p=>p.classList.remove('pinned'));S.conn=null}
+    if(S.conn){
+      document.getElementById('conn-line').setAttribute('visibility', 'hidden');
+      const tgtPort = ev.target.closest?.('.port, .port-row');
+      const tgtNode = ev.target.closest?.('.n8n-node');
+      if(tgtNode && +tgtNode.dataset.id !== S.conn.id) {
+        const source_port = { side: S.conn.side, col: S.conn.col };
+        const target_port = tgtPort ? { side: tgtPort.dataset.s, col: tgtPort.dataset.ci !== undefined ? +tgtPort.dataset.ci : undefined } : { side: 'l' };
+        await addEdge(S.conn.id, +tgtNode.dataset.id, source_port, target_port);
+      }
+      document.querySelectorAll('.port, .port-row').forEach(p => p.classList.remove('pinned'));
+      S.conn = null;
+    }
   });
   w.addEventListener('wheel',ev=>{ev.preventDefault();zoom(ev.deltaY>0?-0.08:0.08)},{passive:false});
   // dragover must be prevented on the wrap AND every child so the browser
@@ -795,7 +931,16 @@ function setupCanvas() {
 }
 
 function nodeDown(ev){if(ev.target.classList.contains('port')) return;if(ev.button!==0)return;const el=ev.currentTarget;S.drag={el,id:+el.dataset.id,mx:ev.clientX,my:ev.clientY,ox:parseFloat(el.style.left),oy:parseFloat(el.style.top),moved:false};ev.stopPropagation()}
-function portDown(ev){ev.stopPropagation();S.conn={id:+ev.currentTarget.dataset.ni};document.querySelectorAll('.port').forEach(p=>p.classList.add('pinned'))}
+function portDown(ev){
+  ev.stopPropagation();
+  const p = ev.currentTarget;
+  S.conn = {
+    id: +p.dataset.ni,
+    side: p.dataset.s,
+    col: p.dataset.ci !== undefined ? +p.dataset.ci : undefined
+  };
+  document.querySelectorAll('.port, .port-row').forEach(el=>el.classList.add('pinned'));
+}
 function pdrag(ev,t){ev.dataTransfer.setData('nt',t)}
 
 function zoom(d){S.scale=Math.max(0.15,Math.min(3,S.scale+d));applyXf();document.getElementById('zoom-val').textContent=Math.round(S.scale*100)+'%'}
@@ -830,9 +975,10 @@ async function delNode(){
   S.diagrams=await api.g(`/api/projects/${window._activePid}/boards`); renderWfList(); toast('Node removed');
 }
 
-async function addEdge(src,tgt){
+async function addEdge(src,tgt,sourcePort,targetPort){
   const et=S.cur.type==='db_diagram'?'one_to_many':'default';
-  const e=await api.p(`/api/projects/${window._activePid}/boards/${S.cur.id}/edges`,{source_id:src,target_id:tgt,edge_type:et});
+  const meta = { source_port: sourcePort, target_port: targetPort };
+  const e=await api.p(`/api/projects/${window._activePid}/boards/${S.cur.id}/edges`,{source_id:src,target_id:tgt,edge_type:et,meta});
   if(e.error){toast('Error: '+e.error,'err');return}
   S.cur.edges.push(e); makeEdge(e);
   S.diagrams=await api.g(`/api/projects/${window._activePid}/boards`); renderWfList();
@@ -856,7 +1002,7 @@ async function autoLayoutNodes() {
     rank_spacing: 300
   });
   if(res.error) { toast('Layout error: ' + res.error, 'err'); return; }
-  S.cur = res.diagram;
+  S.cur = res;
   renderCanvas();
   fitView();
   toast('Layout complete', 'ok');
@@ -893,9 +1039,42 @@ function renderNodeProps(id) {
       </div>
       <button class="add-col" onclick="addCol(${n.id})">+ Add Column</button>
     </div>`:''}
+    ${n.node_type==='external_table'?`
+    <div class="pg">
+      <div class="plabel">Reference Board</div>
+      <select class="pselect" onchange="up_meta(${n.id},'ref_diagram_id',+this.value); S.tables=null; renderNodeProps(${n.id})">
+        <option value="">(Select Board)</option>
+        ${S.diagrams.filter(d=>d.id!==S.cur.id).map(d=>`<option value="${d.id}" ${n.meta?.ref_diagram_id===d.id?'selected':''}>${esc(d.name)}</option>`).join('')}
+      </select>
+    </div>
+    ${n.meta?.ref_diagram_id?`
+    <div class="pg">
+      <div class="plabel">Reference Table</div>
+      <div id="ext-tab-wrap">
+        <select class="pselect" onchange="up_meta(${n.id},'ref_node_id',+this.value); syncExtTable(${n.id}, +this.value)">
+          <option value="">(Loading...)</option>
+        </select>
+      </div>
+    </div>`:''}
+    `:''}
     <div class="pg"><div class="plabel">Position</div><div class="prow"><input class="pinput" type="number" id="pp-x" value="${Math.round(n.x)}" placeholder="X" oninput="up_pos()"><input class="pinput" type="number" id="pp-y" value="${Math.round(n.y)}" placeholder="Y" oninput="up_pos()"></div></div>
     <div class="psep"></div>
     <div class="dz"><button class="btn btn-danger-soft" style="width:100%;justify-content:center" onclick="delNode()">× Delete Node</button></div>`;
+    
+    // External table async loading
+    if(n.node_type==='external_table' && n.meta?.ref_diagram_id){
+      (async()=>{
+        const tables = await api.g(`/api/projects/${window._activePid}/all-tables`);
+        const filtered = tables.filter(t=>t.diagram_id===n.meta.ref_diagram_id);
+        const wrap=document.getElementById('ext-tab-wrap');
+        if(wrap){
+          wrap.innerHTML=`<select class="pselect" onchange="up_meta(${n.id},'ref_node_id',+this.value); syncExtTable(${n.id}, +this.value)">
+            <option value="">(Select Table)</option>
+            ${filtered.map(t=>`<option value="${t.id}" ${n.meta?.ref_node_id===t.id?'selected':''}>${esc(t.label)}</option>`).join('')}
+          </select>`;
+        }
+      })();
+    }
 }
 
 function renderEdgeProps(id) {
@@ -919,6 +1098,24 @@ function renderEdgeProps(id) {
 async function up_label(v){const n=S.cur.nodes.find(x=>x.id===S.selN);if(!n)return;n.label=v;document.getElementById('pt').textContent=v;refreshNode(n);await api.h(`/api/projects/${window._activePid}/boards/${S.cur.id}/nodes/${n.id}`,{label:v})}
 async function up_type(v){const n=S.cur.nodes.find(x=>x.id===S.selN);if(!n)return;n.node_type=v;const def=getDef(v);const pi=document.getElementById('pi');pi.style.background=def.b;pi.style.color=def.c;pi.textContent=def.i;refreshNode(n);await api.h(`/api/projects/${window._activePid}/boards/${S.cur.id}/nodes/${n.id}`,{node_type:v});renderNodeProps(n.id)}
 async function up_desc(v){const n=S.cur.nodes.find(x=>x.id===S.selN);if(!n)return;n.meta={...n.meta,description:v};refreshNode(n);await api.h(`/api/projects/${window._activePid}/boards/${S.cur.id}/nodes/${n.id}`,{meta:n.meta})}
+async function up_meta(nid,k,v){
+  const n=S.cur.nodes.find(x=>x.id===nid); if(!n)return;
+  n.meta=n.meta||{}; n.meta[k]=v;
+  if(k==='ref_diagram_id'){ delete n.meta.ref_node_id; delete n.meta.columns; n.label='External Table' }
+  refreshNode(n); await api.h(`/api/projects/${window._activePid}/boards/${S.cur.id}/nodes/${nid}`,{meta:n.meta, label:n.label});
+  renderNodeProps(nid);
+}
+async function syncExtTable(nid, refNid){
+  const n=S.cur.nodes.find(x=>x.id===nid); if(!n) return;
+  const tables = await api.g(`/api/projects/${window._activePid}/all-tables`);
+  const t = tables.find(x=>x.id===refNid);
+  if(t){
+    n.label = t.label;
+    n.meta.columns = t.meta?.columns || [];
+    refreshNode(n);
+    await api.h(`/api/projects/${window._activePid}/boards/${S.cur.id}/nodes/${nid}`,{meta:n.meta, label:n.label});
+  }
+}
 async function up_pos(){const n=S.cur.nodes.find(x=>x.id===S.selN);if(!n)return;const x=+document.getElementById('pp-x').value,y=+document.getElementById('pp-y').value;n.x=x;n.y=y;const el=document.getElementById(`n-${n.id}`);el.style.left=x+'px';el.style.top=y+'px';posAll();await api.h(`/api/projects/${window._activePid}/boards/${S.cur.id}/nodes/${n.id}`,{x,y})}
 async function addCol(nid){const n=S.cur.nodes.find(x=>x.id===nid);if(!n)return;n.meta=n.meta||{};n.meta.columns=n.meta.columns||[];n.meta.columns.push({name:'new_col',type:'VARCHAR',pk:false,fk:false});await api.h(`/api/projects/${window._activePid}/boards/${S.cur.id}/nodes/${nid}`,{meta:n.meta});refreshNode(n);renderNodeProps(nid)}
 async function editCol(nid,i,f,v){const n=S.cur.nodes.find(x=>x.id===nid);if(!n||!n.meta?.columns)return;n.meta.columns[i][f]=v;refreshNode(n);await api.h(`/api/projects/${window._activePid}/boards/${S.cur.id}/nodes/${nid}`,{meta:n.meta})}
@@ -947,7 +1144,55 @@ function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').repl
 let _tt;
 function toast(msg,k=''){const el=document.getElementById('toast');el.textContent=msg;el.className='show'+(k?' '+k:'');clearTimeout(_tt);_tt=setTimeout(()=>{el.className=''},2400)}
 
+// ── REAL-TIME EVENTS ──────────────────────────────────────────
+function initRealtimeEvents() {
+  console.log('📡 Initializing Real-time Events (Editor)...');
+  const source = new EventSource('/api/events');
+  source.onmessage = (e) => {
+    try {
+      const { type, data } = JSON.parse(e.data);
+      if (type === 'system_change') {
+        // If it's a board update for THIS board, refresh
+        if (S.cur && data.path.includes(`/boards/${S.cur.id}`)) {
+          console.log('🔄 Remote board change detected, refreshing...', data.tool);
+          refreshBoardData();
+          if (data.tool) toast(`AI (${data.tool}) updated board`, 'ok');
+        }
+      } else if (type === 'mcp_tool_call') {
+        showMcpIndicator(data.tool);
+      }
+    } catch(err) { console.error('SSE Error:', err); }
+  };
+}
+
+async function refreshBoardData() {
+  if (!S.cur) return;
+  const board = await api.g(`/api/projects/${window._activePid}/boards/${S.cur.id}`);
+  if (board.error) return;
+  S.cur = board;
+  renderCanvas();
+  // Optional: only fit view if it's the first load or explicit
+}
+
+let _mcpIndicatorTimeout = null;
+function showMcpIndicator(tool) {
+  const container = document.getElementById('mcp-status-container');
+  if (!container) return;
+  container.innerHTML = '';
+  const el = document.createElement('div');
+  el.className = 'mcp-indicator';
+  el.innerHTML = `<div class="icon">🤖</div><div class="body"><div class="title">AI is thinking...</div><div class="tool">${tool}</div></div><div class="dots"><span></span><span></span><span></span></div>`;
+  container.appendChild(el);
+  clearTimeout(_mcpIndicatorTimeout);
+  _mcpIndicatorTimeout = setTimeout(() => {
+    el.style.transform = 'translateX(100%)'; el.style.opacity = '0'; el.style.transition = 'all .4s ease-in';
+    setTimeout(() => el.remove(), 400);
+  }, 4000);
+}
+
 init();
+initRealtimeEvents();
+
 </script>
 </body>
 </html>

@@ -28,6 +28,24 @@ def list_diagrams(pid):
     return ok([d.to_dict() for d in q.order_by(Diagram.updated_at.desc()).all()])
 
 
+@boards_bp.route('/api/projects/<int:pid>/all-tables', methods=['GET'])
+def list_all_tables(pid):
+    """List all table nodes across all diagrams in a project for cross-referencing."""
+    db.get_or_404(Project, pid)
+    diagrams = Diagram.query.filter_by(project_id=pid).all()
+    did_map = {d.id: d.name for d in diagrams}
+    
+    tables = []
+    for d in diagrams:
+        nodes = Node.query.filter_by(diagram_id=d.id, node_type='table').all()
+        for n in nodes:
+            t_dict = n.to_dict()
+            t_dict['diagram_name'] = did_map.get(n.diagram_id)
+            tables.append(t_dict)
+            
+    return ok(tables)
+
+
 @boards_bp.route('/api/projects/<int:pid>/boards', methods=['POST'])
 def create_diagram(pid):
     db.get_or_404(Project, pid)
@@ -244,68 +262,3 @@ def create_from_template(pid):
 
     db.session.commit()
     return ok(d.to_dict(full=True), 201)
-
-
-# ─── Phase 6: Auto-layout ────────────────────────────────────────────────────
-
-@boards_bp.route('/api/projects/<int:pid>/boards/<int:did>/auto-layout', methods=['POST'])
-def auto_layout(pid, did):
-    """Hierarchical layout for clear node/edge organization."""
-    db.get_or_404(Project, pid)
-    d = db.get_or_404(Diagram, did)
-    body = request.get_json(silent=True) or {}
-    direction = body.get('direction', 'LR') # LR or TB
-    node_spacing = float(body.get('node_spacing', 80))
-    rank_spacing = float(body.get('rank_spacing', 280))
-
-    nodes = d.nodes
-    edges = d.edges
-    if not nodes:
-        return ok(d.to_dict(full=True))
-
-    # 1. Build adjacency list and in-degrees
-    adj = {n.id: [] for n in nodes}
-    in_degree = {n.id: 0 for n in nodes}
-    for e in edges:
-        if e.source_id in adj and e.target_id in adj:
-            adj[e.source_id].append(e.target_id)
-            in_degree[e.target_id] += 1
-
-    # 2. Assign ranks using BFS-based topological approach (handles DAGs)
-    ranks = {n.id: 0 for n in nodes}
-    queue = [n.id for n in nodes if in_degree[n.id] == 0]
-    
-    # If there are cycles, pick the first node as a starting point.
-    if not queue and nodes:
-        queue = [nodes[0].id]
-
-    visited = set()
-    while queue:
-        curr = queue.pop(0)
-        if curr in visited: continue
-        visited.add(curr)
-        for neighbor in adj.get(curr, []):
-            ranks[neighbor] = max(ranks[neighbor], ranks[curr] + 1)
-            queue.append(neighbor)
-
-    # 3. Group nodes by rank
-    by_rank = {}
-    for node_id, rank in ranks.items():
-        if rank not in by_rank: by_rank[rank] = []
-        by_rank[rank].append(node_id)
-
-    # 4. Apply coordinates
-    START_X, START_Y = 100, 100
-    for rank_idx, node_ids in sorted(by_rank.items()):
-        for i, node_id in enumerate(node_ids):
-            node = next(n for n in nodes if n.id == node_id)
-            if direction == 'LR':
-                node.x = START_X + rank_idx * rank_spacing
-                node.y = START_Y + i * (node.height + node_spacing)
-            else: # TB
-                node.x = START_X + i * (node.width + node_spacing)
-                node.y = START_Y + rank_idx * rank_spacing
-
-    d.updated_at = datetime.utcnow()
-    db.session.commit()
-    return ok(d.to_dict(full=True))

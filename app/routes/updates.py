@@ -1,5 +1,6 @@
 """Progress Updates routes."""
 from flask import Blueprint, jsonify, request
+import json
 from app import db
 from app.models import Update, Project, UPDATE_TYPES
 
@@ -40,6 +41,7 @@ def create_update(pid):
         task_id=body.get('task_id'),
         content=content,
         update_type=update_type,
+        files_meta=json.dumps(body.get('files_meta', [])),
     )
     db.session.add(u)
     db.session.commit()

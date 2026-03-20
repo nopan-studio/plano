@@ -60,21 +60,24 @@ def _compute_layout(nodes, edges, direction='LR', node_spacing=80, rank_spacing=
     if not roots:
         roots = [min(node_ids, key=lambda nid: len(parents[nid]))]
     
-    ranks = {}
-    
-    # BFS from roots to assign ranks
-    queue = deque()
-    for r in roots:
-        ranks[r] = 0
-        queue.append(r)
+    # BFS from roots to assign ranks, with cycle protection
+    queue = deque([(r, 0) for r in roots])
+    ranks = {r: 0 for r in roots}
+    visited_count = {r: 1 for r in roots}
+    max_nodes = len(node_ids)
     
     while queue:
-        nid = queue.popleft()
+        nid, d = queue.popleft()
+        if d > max_nodes: continue # cycle protection
+        
         for child in children[nid]:
             new_rank = ranks[nid] + 1
             if child not in ranks or new_rank > ranks[child]:
-                ranks[child] = new_rank
-                queue.append(child)
+                # Limit visits to prevent infinite cycles
+                if visited_count.get(child, 0) < max_nodes:
+                    ranks[child] = new_rank
+                    visited_count[child] = visited_count.get(child, 0) + 1
+                    queue.append((child, new_rank))
     
     # Assign disconnected nodes (not reachable from roots)
     max_rank = max(ranks.values()) if ranks else 0

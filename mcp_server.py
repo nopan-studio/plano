@@ -25,6 +25,7 @@ import time
 import os
 import signal
 import atexit
+import inspect
 from pathlib import Path
 from urllib.request import urlopen, Request
 from urllib.error import URLError
@@ -34,7 +35,7 @@ from mcp.server.fastmcp import FastMCP
 # ─── Configuration ─────────────────────────────────────────────────────────────
 
 PROJECT_DIR = Path(__file__).resolve().parent
-DEFAULT_PORT = 5050
+DEFAULT_PORT = 5000
 BASE_URL = f"http://127.0.0.1:{DEFAULT_PORT}"
 HEALTH_URL = f"{BASE_URL}/health"
 
@@ -98,14 +99,28 @@ atexit.register(_shutdown_server)
 
 # ─── HTTP helpers ──────────────────────────────────────────────────────────────
 
-def _api(method: str, path: str, body: dict | None = None) -> dict:
+
+def _api(method: str, path: str, body: dict | None = None, tool_name: str | None = None) -> dict:
     """Make an HTTP request to the Flask API and return parsed JSON."""
     _ensure_server()
+
+    # Auto-detect tool name from caller if not provided
+    if not tool_name:
+        stack = inspect.stack()
+        for frame in stack[1:]:
+            # The tool function name is usually the one with the @mcp.tool decorator
+            # We skip internal helpers
+            if frame.function.startswith('_') or frame.function == 'main':
+                continue
+            tool_name = frame.function
+            break
 
     url = f"{BASE_URL}{path}"
     data = json.dumps(body).encode() if body else None
     req = Request(url, data=data, method=method)
     req.add_header("Content-Type", "application/json")
+    if tool_name:
+        req.add_header("X-Plano-Tool", tool_name)
 
     try:
         resp = urlopen(req, timeout=30)
@@ -287,6 +302,35 @@ def delete_project(project_id: int) -> str:
 
 
 @mcp.tool()
+def export_project(project_id: int) -> str:
+    """Export an entire project as a high-fidelity JSON blob.
+
+    Captures: project metadata, milestones, tasks, diagrams (with nodes & edges),
+    ideas, updates, and changelog entries.
+
+    Args:
+        project_id: The project ID.
+    """
+    return json.dumps(_api("GET", f"/api/projects/{project_id}/export"), indent=2)
+
+
+@mcp.tool()
+def import_project(export_blob: str) -> str:
+    """Import a project from a previously exported JSON blob.
+
+    Recreates the full project structure: project, milestones, tasks,
+    diagrams (with nodes & edges), ideas, and updates.
+
+    Args:
+        export_blob: JSON string of the project export.
+    """
+    body = json.loads(export_blob)
+    return json.dumps(_api("POST", "/api/projects/import", body), indent=2)
+
+
+
+
+@mcp.tool()
 def project_dashboard(project_id: int) -> str:
     """Get a project dashboard with task/milestone stats and recent changes.
 
@@ -304,7 +348,7 @@ def list_tasks(project_id: int, status: str = "", assignee: str = "", milestone_
 
     Args:
         project_id: The project ID.
-        status: Filter by status (todo/in_progress/review/done). Empty = all.
+        status: Filter by status (bugs/todo/in_progress/review/done). Empty = all.
         assignee: Filter by assignee name. Empty = all.
         milestone_id: Filter by milestone ID (-1 = all).
     """
@@ -331,6 +375,8 @@ def create_task(
     due_date: str = "",
     estimated_hours: float = -1,
     tags: str = "[]",
+    files_meta: str = "[]",
+    is_ai_working: int = -1,
 ) -> str:
     """Create a task in a project. Auto-logs to changelog.
 
@@ -339,18 +385,24 @@ def create_task(
         title: Task title.
         description: Task description.
         assignee: Assigned person.
-        status: Status (todo/in_progress/review/done).
+        status: Status (bugs/todo/in_progress/review/done).
         priority: Priority (low/medium/high/critical).
         milestone_id: Link to milestone (-1 = none).
         due_date: Due date YYYY-MM-DD (empty = none).
         estimated_hours: Estimated hours (-1 = none).
         tags: JSON array string of tags.
+        is_ai_working: 1 for active, 0 for inactive, -1 to skip.
     """
     body: dict = {
         "title": title, "description": description,
         "assignee": assignee, "status": status, "priority": priority,
         "tags": json.loads(tags),
+        "files_meta": json.loads(files_meta),
     }
+    if is_ai_working != -1:
+        body["is_ai_working"] = bool(is_ai_working)
+    elif status == "in_progress":
+        body["is_ai_working"] = True
     if milestone_id >= 0:
         body["milestone_id"] = milestone_id
     if due_date:
@@ -372,6 +424,8 @@ def update_task(
     due_date: str = "",
     estimated_hours: float = -1,
     actual_hours: float = -1,
+    files_meta: str = "",
+    is_ai_working: int = -1,
 ) -> str:
     """Update a task. Changes are auto-logged to the changelog.
 
@@ -381,11 +435,12 @@ def update_task(
         title: New title (empty = keep).
         description: New description (empty = keep).
         assignee: New assignee (empty = keep).
-        status: New status (empty = keep).
+        status: New status (bugs/todo/in_progress/review/done, empty = keep).
         priority: New priority (empty = keep).
         due_date: New due date YYYY-MM-DD (empty = keep).
         estimated_hours: New estimate (-1 = keep).
         actual_hours: New actual hours (-1 = keep).
+        is_ai_working: 1 for active, 0 for inactive, -1 to keep current.
     """
     body: dict = {}
     if title:
@@ -404,6 +459,16 @@ def update_task(
         body["estimated_hours"] = estimated_hours
     if actual_hours >= 0:
         body["actual_hours"] = actual_hours
+    if files_meta:
+        body["files_meta"] = json.loads(files_meta)
+    if is_ai_working != -1:
+        body["is_ai_working"] = bool(is_ai_working)
+    elif status == "in_progress":
+        # Smart default for AI agents
+        body["is_ai_working"] = True
+    elif status in ["bugs", "todo", "done", "review"] and status:
+        # If moving out of progress, default to stopping the AI flag
+        body["is_ai_working"] = False
     return json.dumps(_api("PATCH", f"/api/projects/{project_id}/tasks/{task_id}", body), indent=2)
 
 
@@ -416,6 +481,22 @@ def delete_task(project_id: int, task_id: int) -> str:
         task_id: The task ID.
     """
     return json.dumps(_api("DELETE", f"/api/projects/{project_id}/tasks/{task_id}"), indent=2)
+
+
+@mcp.tool()
+def set_ai_working_status(project_id: int, task_id: int, is_working: bool) -> str:
+    """Explicitly set the 'AI working' indicator for a task.
+
+    Use this when starting or pausing work on a specific task without changing 
+    its status, though status updates also handle this automatically now.
+
+    Args:
+        project_id: The project ID.
+        task_id: The task ID.
+        is_working: True to show AI is active, False to stop.
+    """
+    body = {"is_ai_working": is_working}
+    return json.dumps(_api("POST", f"/api/projects/{project_id}/tasks/{task_id}/ai-status", body), indent=2)
 
 
 # ── Milestones ────────────────────────────────────────────────────────────────
@@ -527,6 +608,7 @@ def post_update(
     content: str,
     update_type: str = "progress",
     task_id: int = -1,
+    files_meta: str = "[]",
 ) -> str:
     """Post a progress update to a project.
 
@@ -536,7 +618,7 @@ def post_update(
         update_type: Type (progress/blocker/decision/note).
         task_id: Optionally link to a task (-1 = none).
     """
-    body: dict = {"content": content, "update_type": update_type}
+    body: dict = {"content": content, "update_type": update_type, "files_meta": json.loads(files_meta)}
     if task_id >= 0:
         body["task_id"] = task_id
     return json.dumps(_api("POST", f"/api/projects/{project_id}/updates", body), indent=2)
@@ -766,6 +848,8 @@ def create_node(
         y: Y position (-1 = auto-position to avoid overlap).
         width: Width. height: Height.
         meta: JSON string of extra metadata.
+            For 'db_diagram' tables (use node_type='db_table'), meta should contain a 'columns' list:
+            {"columns": [{"name": "id", "type": "INTEGER", "is_pk": true}, {"name": "user_id", "is_fk": true, "ref": "users.id"}]}
     """
     # Auto-position if no coordinates provided
     if x < 0 or y < 0:
@@ -816,6 +900,8 @@ def update_node(
         x: New X (-1 = keep). y: New Y (-1 = keep).
         width: New width (-1 = keep). height: New height (-1 = keep).
         meta: New metadata JSON string (empty = keep).
+            For 'db_diagram' tables (use node_type='db_table'), can contain 'columns' list:
+            {"columns": [{"name": "id", "type": "INT", "is_pk": true}]}
     """
     body: dict = {}
     if label: body["label"] = label
@@ -869,6 +955,7 @@ def list_edges(project_id: int = -1, diagram_id: int = -1):
 def create_edge(
     project_id: int, diagram_id: int, source_id: int, target_id: int,
     label: str = "", edge_type: str = "default", meta: str = "{}",
+    source_column: str = "", target_column: str = "",
 ) -> str:
     """Create an edge connecting two nodes.
 
@@ -878,12 +965,18 @@ def create_edge(
         source_id: Source node ID. target_id: Target node ID.
         label: Edge label. edge_type: Edge type (varies by diagram type).
         meta: JSON metadata string.
+        source_column: For DB diagrams, the specific column name in the source table.
+        target_column: For DB diagrams, the specific column name in the target table.
     """
+    m = json.loads(meta)
+    if source_column: m["source_column"] = source_column
+    if target_column: m["target_column"] = target_column
+
     return json.dumps(
         _api("POST", f"/api/projects/{project_id}/boards/{diagram_id}/edges", {
             "source_id": source_id, "target_id": target_id,
             "label": label, "edge_type": edge_type,
-            "meta": json.loads(meta),
+            "meta": m,
         }),
         indent=2,
     )
@@ -910,6 +1003,7 @@ def get_edge(edge_id: int, project_id: int = -1, diagram_id: int = -1):
 def update_edge(
     project_id: int, diagram_id: int, edge_id: int,
     label: str = "", edge_type: str = "", meta: str = "",
+    source_column: str = "", target_column: str = "",
 ) -> str:
     """Update an edge. Only provided fields are changed.
 
@@ -918,11 +1012,18 @@ def update_edge(
         diagram_id: The diagram ID. edge_id: The edge ID.
         label: New label (empty = keep). edge_type: New type (empty = keep).
         meta: New metadata JSON (empty = keep).
+        source_column: New source column (empty = keep).
+        target_column: New target column (empty = keep).
     """
     body: dict = {}
     if label: body["label"] = label
     if edge_type: body["edge_type"] = edge_type
-    if meta: body["meta"] = json.loads(meta)
+    
+    m = json.loads(meta) if meta else {}
+    if source_column: m["source_column"] = source_column
+    if target_column: m["target_column"] = target_column
+    if m: body["meta"] = m
+    
     return json.dumps(_api("PATCH", f"/api/projects/{project_id}/boards/{diagram_id}/edges/{edge_id}", body), indent=2)
 
 
@@ -973,6 +1074,13 @@ def bulk_operations(operations: str, project_id: int = -1, diagram_id: int = -1,
         operations: JSON string array of operation objects.
             Supported actions: create_node, update_node, delete_node,
             create_edge, update_edge, delete_edge, update_diagram.
+            
+            When creating a 'db_table' node in a 'db_diagram', you can include:
+            "meta": {"columns": [{"name": "id", "type": "INT", "is_pk": true}, ...]}
+            
+            When creating an edge in a 'db_diagram', you can include:
+            "meta": {"source_column": "user_id", "target_column": "id"}
+            
         project_id: The project ID.
         diagram_id: The diagram ID.
         auto_layout: If True (default), automatically apply hierarchical layout
@@ -986,6 +1094,14 @@ def bulk_operations(operations: str, project_id: int = -1, diagram_id: int = -1,
     if project_id < 0:
          return json.dumps({"error": "project_id is required."})
     ops = json.loads(operations)
+    # Ensure meta is an object if passed as string in individual ops
+    for op in ops:
+        if "meta" in op and isinstance(op["meta"], str) and op["meta"]:
+            try:
+                op["meta"] = json.loads(op["meta"])
+            except:
+                pass
+
     result = _api("POST", f"/api/projects/{project_id}/boards/{diagram_id}/bulk", {"ops": ops})
 
     # Auto-layout after bulk operations if enabled
@@ -1042,6 +1158,110 @@ def auto_layout(
         }),
         indent=2,
     )
+
+
+# ── File Change Capture ──────────────────────────────────────────────────────
+
+def _git_changed_files(workspace_path: str, since_ref: str = "") -> list[dict]:
+    """Run git commands to detect changed files in a workspace.
+
+    Returns a list of dicts: [{"action": "added|modified|deleted|renamed", "path": "..."}]
+    """
+    import subprocess as _sp
+
+    cwd = workspace_path or "."
+    results: list[dict] = []
+
+    # Map git status codes to human actions
+    status_map = {
+        "A": "added", "M": "modified", "D": "deleted",
+        "R": "renamed", "C": "copied", "?": "untracked",
+    }
+
+    try:
+        if since_ref:
+            # Diff against a specific ref (commit, branch, tag)
+            cmd = ["git", "diff", "--name-status", since_ref, "HEAD"]
+        else:
+            # Show all uncommitted changes (staged + unstaged + untracked)
+            # First: staged + unstaged
+            cmd = ["git", "diff", "--name-status", "HEAD"]
+
+        proc = _sp.run(cmd, cwd=cwd, capture_output=True, text=True, timeout=15)
+        for line in proc.stdout.strip().splitlines():
+            parts = line.split("\t", 1)
+            if len(parts) == 2:
+                code = parts[0][0]  # first char (R100 -> R)
+                action = status_map.get(code, "modified")
+                results.append({"action": action, "path": parts[1]})
+
+        # Also capture untracked files if no ref specified
+        if not since_ref:
+            proc2 = _sp.run(
+                ["git", "ls-files", "--others", "--exclude-standard"],
+                cwd=cwd, capture_output=True, text=True, timeout=15,
+            )
+            for line in proc2.stdout.strip().splitlines():
+                if line:
+                    results.append({"action": "added", "path": line})
+
+    except Exception as exc:
+        results.append({"action": "error", "path": str(exc)})
+
+    return results
+
+
+@mcp.tool()
+def capture_file_changes(
+    project_id: int,
+    task_id: int,
+    workspace_path: str = "",
+    since_ref: str = "",
+    auto_update_task: bool = True,
+    is_ai_working: int = -1,
+) -> str:
+    """Automatically capture file changes from a Git workspace and log them to a Plano task.
+
+    This tool uses `git diff` to detect which files were added, modified, deleted,
+    or renamed in the workspace, then stores the results in the task's `files_meta`.
+
+    Best used by AI agents after completing work on a task, to automatically
+    record exactly which files were touched.
+
+    Args:
+        project_id: The project ID.
+        task_id: The task ID to attach file changes to.
+        workspace_path: Absolute path to the git workspace root. Empty = use Plano project dir.
+        since_ref: Git ref to diff against (commit SHA, branch, tag). Empty = uncommitted changes vs HEAD.
+        auto_update_task: If True (default), automatically patches the task's files_meta with captured changes.
+        is_ai_working: 1 for active, 0 for inactive, -1 to keep current.
+    """
+    path = workspace_path or str(PROJECT_DIR)
+    changes = _git_changed_files(path, since_ref)
+
+    result: dict = {
+        "workspace": path,
+        "since_ref": since_ref or "HEAD (uncommitted)",
+        "files_changed": len(changes),
+        "changes": changes,
+    }
+
+    if auto_update_task and changes:
+        patch_body: dict = {"files_meta": changes}
+        if is_ai_working != -1:
+            patch_body["is_ai_working"] = bool(is_ai_working)
+            
+        patch_result = _api(
+            "PATCH",
+            f"/api/projects/{project_id}/tasks/{task_id}",
+            patch_body,
+        )
+        result["task_updated"] = True
+        result["task"] = patch_result
+    else:
+        result["task_updated"] = False
+
+    return json.dumps(result, indent=2)
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────

@@ -1,6 +1,6 @@
 # Plano
 
-![Plano Logo](./static/logo.png)
+![Plano Logo](https://github.com/nopan-studio/plano/raw/main/static/logo.png)
 
 Plano is a minimalist, powerful project management system designed with one core philosophy: **calm, structured oversight over everything.**
 It features built-in visual diagrams alongside standard task tracking so your architecture, process flows, and daily tasks all live in one cohesive environment.
@@ -16,6 +16,16 @@ It features built-in visual diagrams alongside standard task tracking so your ar
   - Function & API Flows
 - **MCP Native Integration**: Built from the ground up to be easily operated via the Model Context Protocol (MCP), meaning AI assistants can auto-generate and manage your diagrams and project data.
 - **API Tester**: Full built-in API testing interface.
+
+## Screenshots
+
+![Screenshot 1](https://github.com/nopan-studio/plano/raw/main/static/1.jpg.jpeg)
+![Screenshot 2](https://github.com/nopan-studio/plano/raw/main/static/2.jpg.jpeg)
+![Screenshot 3](https://github.com/nopan-studio/plano/raw/main/static/3.jpg.jpeg)
+![Screenshot 4](https://github.com/nopan-studio/plano/raw/main/static/4.jpg.jpeg)
+![Screenshot 5](https://github.com/nopan-studio/plano/raw/main/static/5.jpg.jpeg)
+![Screenshot 6](https://github.com/nopan-studio/plano/raw/main/static/6.jpg.jpeg)
+![Screenshot 7](https://github.com/nopan-studio/plano/raw/main/static/7.jpg.jpeg)
 
 ## Quick Start
 

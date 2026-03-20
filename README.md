@@ -45,14 +45,27 @@ If you are using an AI assistant that supports MCP auto-discovery (like Antigrav
 > `{{PATH}} install this mcp tool`
 
 ### Manual Configuration (Claude Desktop)
-Add the following to your `claude_desktop_config.json`:
+Add the following to your `claude_desktop_config.json` (replacing `/PATH/TO/PLANO` with the absolute path to this project):
 
+**Linux / macOS:**
 ```json
 {
   "mcpServers": {
     "plano": {
-      "command": "/home/tsuki/Projects/Plano/venv/bin/python",
-      "args": ["/home/tsuki/Projects/Plano/mcp_server.py"]
+      "command": "/PATH/TO/PLANO/venv/bin/python",
+      "args": ["/PATH/TO/PLANO/mcp_server.py"]
+    }
+  }
+}
+```
+
+**Windows:**
+```json
+{
+  "mcpServers": {
+    "plano": {
+      "command": "C:\\PATH\\TO\\PLANO\\venv\\Scripts\\python.exe",
+      "args": ["C:\\PATH\\TO\\PLANO\\mcp_server.py"]
     }
   }
 }

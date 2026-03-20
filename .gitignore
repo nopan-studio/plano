@@ -1,0 +1,7 @@
+venv/
+__pycache__/
+*.pyc
+plano.db
+plano.log
+.plano.pid
+.DS_Store

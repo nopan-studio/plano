@@ -1,6 +1,6 @@
 # Plano
 
-![Plano Logo](https://github.com/nopan-studio/plano/raw/main/static/logo.png)
+<img src="https://github.com/nopan-studio/plano/raw/main/static/logo.png" alt="Plano Logo" width="250" />
 
 Plano is a minimalist, powerful project management system designed with one core philosophy: **calm, structured oversight over everything.**
 It features built-in visual diagrams alongside standard task tracking so your architecture, process flows, and daily tasks all live in one cohesive environment.
@@ -26,6 +26,7 @@ It features built-in visual diagrams alongside standard task tracking so your ar
 ![Screenshot 5](https://github.com/nopan-studio/plano/raw/main/static/5.jpg.jpeg)
 ![Screenshot 6](https://github.com/nopan-studio/plano/raw/main/static/6.jpg.jpeg)
 ![Screenshot 7](https://github.com/nopan-studio/plano/raw/main/static/7.jpg.jpeg)
+![Screenshot 8](https://github.com/nopan-studio/plano/raw/main/static/8.png)
 
 ## Quick Start
 

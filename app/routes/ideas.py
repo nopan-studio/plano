@@ -3,6 +3,7 @@ from flask import Blueprint, jsonify, request
 import json
 from app import db
 from app.models import Idea, IDEA_STATUSES
+from app.changelog import log_change, log_field_changes
 
 ideas_bp = Blueprint('ideas', __name__)
 
@@ -46,6 +47,8 @@ def create_idea():
     )
     db.session.add(idea)
     db.session.commit()
+    if idea.project_id:
+        log_change(idea.project_id, 'idea', idea.id, 'created')
     return ok(idea.to_dict(), 201)
 
 
@@ -58,6 +61,7 @@ def get_idea(iid):
 @ideas_bp.route('/api/ideas/<int:iid>', methods=['PUT', 'PATCH'])
 def update_idea(iid):
     idea = db.get_or_404(Idea, iid)
+    old = idea.to_dict()
     body = request.get_json(silent=True) or {}
 
     if 'title' in body and body['title'].strip():
@@ -76,14 +80,20 @@ def update_idea(iid):
     from datetime import datetime
     idea.updated_at = datetime.utcnow()
     db.session.commit()
+    if idea.project_id:
+        new = idea.to_dict()
+        log_field_changes(idea.project_id, 'idea', idea.id, old, new)
     return ok(idea.to_dict())
 
 
 @ideas_bp.route('/api/ideas/<int:iid>', methods=['DELETE'])
 def delete_idea(iid):
     idea = db.get_or_404(Idea, iid)
+    project_id = idea.project_id
     db.session.delete(idea)
     db.session.commit()
+    if project_id:
+        log_change(project_id, 'idea', iid, 'deleted')
     return ok({'deleted': True, 'id': iid})
 
 

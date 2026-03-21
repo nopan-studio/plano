@@ -28,7 +28,8 @@ When tasked with performing a task from Plano:
 3.  **Confirmation**: Briefly confirm with the user which task is being started and that the status has been updated in Plano. **If the user explicitly uses the command "select" or asks to "select a task", your response must be exactly "task selected" and nothing else.**
 4.  **Review Phase**: Upon finishing the code/work, mark the task as `review` (should go to review before being marked as `done`) AND reset `is_ai_working=0`.
 5.  **Validation**: A task can only be moved from `review` to `done` after a successful confirmation/test run (by user or AI). If issues are found, move it back to `in_progress`.
-6.  **Next Step Hand-off**: After each completed effort (moving to `review`), **STOP and ask the user** if they want to continue with the next task or if they have other instructions. **Do NOT proceed to the next task without explicit user approval.**
+6.  **Progress Update**: After completing the work and before handing off (e.g., when moving a task to `review` or `done`), **ALWAYS create a post update** via `mcp_plano_post_update`. Summarize what was accomplished and link it to the task ID if applicable.
+7.  **Next Step Hand-off**: After each completed effort (moving to `review`), **STOP and ask the user** if they want to continue with the next task or if they have other instructions. **Do NOT proceed to the next task without explicit user approval.**
 
 ## Edge Cases
 - **Server Connectivity**: If the Plano MCP server is unresponsive, default to reading local documentation like `README.md` or git history to determine progress.

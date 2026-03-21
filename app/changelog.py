@@ -27,7 +27,10 @@ def log_change(project_id, entity_type, entity_id, action,
 
 def log_field_changes(project_id, entity_type, entity_id, old_dict, new_dict, changed_by='system'):
     """Compare old and new dicts and log each changed field."""
+    ignore_keys = {'updated_at', 'created_at', 'id', 'project_id', 'task_count', 'milestone_count', 'board_count', 'tasks_by_status'}
     for key in new_dict:
+        if key in ignore_keys:
+            continue
         if key in old_dict and str(old_dict[key]) != str(new_dict[key]):
             log_change(
                 project_id=project_id,

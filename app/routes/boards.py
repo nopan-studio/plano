@@ -4,6 +4,7 @@ from datetime import datetime
 import json
 from app import db
 from app.models import Diagram, Node, Edge, Project, DIAGRAM_TYPES, NODE_TYPES, EDGE_TYPES
+from app.changelog import log_change, log_field_changes
 
 boards_bp = Blueprint('boards', __name__)
 
@@ -64,6 +65,7 @@ def create_diagram(pid):
     )
     db.session.add(d)
     db.session.commit()
+    log_change(pid, 'board', d.id, 'created')
     return ok(d.to_dict(full=True), 201)
 
 
@@ -78,6 +80,7 @@ def get_diagram(pid, did):
 def update_diagram(pid, did):
     db.get_or_404(Project, pid)
     d = db.get_or_404(Diagram, did)
+    old = d.to_dict()
     body = request.get_json(silent=True) or {}
     if 'name' in body and body['name'].strip():
         d.name = body['name'].strip()
@@ -91,6 +94,8 @@ def update_diagram(pid, did):
         d.project_id = body['project_id']
     d.updated_at = datetime.utcnow()
     db.session.commit()
+    new = d.to_dict()
+    log_field_changes(pid, 'board', d.id, old, new)
     return ok(d.to_dict(full=True))
 
 
@@ -100,6 +105,7 @@ def delete_diagram(pid, did):
     d = db.get_or_404(Diagram, did)
     db.session.delete(d)
     db.session.commit()
+    log_change(pid, 'board', did, 'deleted')
     return ok({'deleted': True, 'id': did})
 
 
@@ -143,6 +149,7 @@ def duplicate_diagram(pid, did):
         db.session.add(e)
 
     db.session.commit()
+    log_change(pid, 'board', d.id, 'created', field_changed='duplicated', old_value=did)
     return ok(d.to_dict(full=True), 201)
 
 
@@ -261,4 +268,5 @@ def create_from_template(pid):
             db.session.add(e)
 
     db.session.commit()
+    log_change(pid, 'board', d.id, 'created', field_changed='template', old_value=template_name)
     return ok(d.to_dict(full=True), 201)

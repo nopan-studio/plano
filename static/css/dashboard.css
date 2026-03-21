@@ -40,14 +40,12 @@ button{cursor:pointer;font-family:var(--sans)}
 .sidebar-subnav{margin-top:12px;border-top:1px solid var(--border);padding-top:12px}
 .subnav-item{display:flex;align-items:center;padding:8px 12px;border-radius:var(--r);color:var(--text-dim);font-size:13px;font-weight:500;transition:0.15s;text-decoration:none;gap:8px}
 .subnav-item:hover{background:var(--surface);color:var(--text)}
-.sidebar-footer{margin-top:auto;padding:12px 0 0;border-top:1px solid var(--border);margin-bottom:8px}
-.github-card{display:flex;align-items:center;text-decoration:none;transition:0.2s;gap:5px;color:var(--text-dim);padding:4px;border-radius:4px;width:fit-content}
-.github-card:hover{color:var(--text);background:var(--surface)}
+.sidebar-footer{margin-top:auto;padding:24px 0 12px;border-top:none;display:flex;justify-content:center}
+.github-card{display:flex;align-items:center;text-decoration:none;transition:0.2s;gap:8px;color:var(--text-dim);padding:6px 12px;border-radius:20px;background:var(--surface);border:1px solid var(--border)}
+.github-card:hover{color:var(--text);background:var(--surface2);border-color:var(--accent)}
 .github-logo{opacity:0.6;display:flex;align-items:center}
-.github-card:hover .github-logo{opacity:0.9}
-.github-info{display:flex;align-items:center;gap:3px;font-size:9px;font-weight:500;white-space:nowrap}
-.gh-label{opacity:0.8}
-.gh-repo{opacity:0.4;font-family:var(--mono)}
+.github-card:hover .github-logo{opacity:1;color:var(--accent)}
+.gh-label{font-size:11px;font-weight:600;opacity:0.8;letter-spacing:0.02em}
 
 .main{flex:1;overflow-y:auto;padding:24px;position:relative}
 

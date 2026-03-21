@@ -1,5 +1,8 @@
 # Agent Instructions
 
+> [!IMPORTANT]
+> **Recommended Installation**: For agents like Cursor, Windsurf, or Antigravity, copy these instructions and the contents of the `directives/` folder into your agent's core rules (e.g., `.cursorrules`, `.windsurfrules`). This ensures the agent follows the Plano project management layer.
+
 This project follows an agent-friendly architecture that separates concerns between intent and execution.
 
 ## The 3-Layer Architecture

@@ -27,15 +27,31 @@ It features built-in visual diagrams alongside standard task tracking so your ar
 ## Quick Start
 
 ### 1. Setup Environment
+
+**Linux / macOS:**
 ```bash
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 ```
 
+**Windows:**
+```powershell
+python -m venv venv
+.\venv\Scripts\activate
+pip install -r requirements.txt
+```
+
 ### 2. Start the Server
+
+**Linux / macOS:**
 ```bash
 ./start.sh
+```
+
+**Windows:**
+```powershell
+python run.py
 ```
 
 ### 3. Usage
@@ -43,8 +59,13 @@ pip install -r requirements.txt
 - **Health Check**: `http://localhost:5000/health`
 - **API Docs**: `http://localhost:5000/api`
 
-### 4. Optional: AI Agent Integration
-Plano includes a pre-configured **Directives** system in the `directives/` folder to give AI agents (like Cursor or Windsurf) structured oversight. Check out [AGENTS.md](AGENTS.md) for more details.
+### 4. Recommended: Install AI Agent Directives
+For the best experience, we **highly recommend** installing the pre-configured **Directives** system. This gives AI agents (like Cursor, Windsurf, or Antigravity) structured oversight of your project.
+
+To install:
+1. Copy the contents of [AGENTS.md](AGENTS.md).
+2. Paste them into your agent's custom instructions file (e.g., `.cursorrules`, `.windsurfrules`, or project settings).
+3. The agent will now automatically use Plano to track its own progress seamlessly.
 
 ## MCP Installation
 
@@ -82,24 +103,6 @@ Add the following to your `claude_desktop_config.json` (replacing `/PATH/TO/PLAN
 ```
 
 *Note: The MCP server automatically manages the lifecycle of the Flask backend. On the first tool call, it will start the backend on port 5050 if it isn't already running.*
-
-## AI Agent Integration (Optional)
-
-Plano is built for "agent-led development." You can integrate its MCP server into your AI assistant (like Cursor, Windsurf, or Antigravity) to give it structured oversight of your project management.
-
-### The 3-Layer Architecture
-For optimal results, we recommend a 3-layer approach to agent orchestration, as seen in the project's own development:
-
-1.  **Layer 1: Directive (Intent)**: Standard Operating Procedures (SOPs) defined in the `directives/` folder.
-2.  **Layer 2: Orchestration (Decision)**: The AI Assistant reads directives to decide which tools to execute.
-3.  **Layer 3: Execution (Action)**: The Plano MCP tools directly manage tasks and diagrams.
-
-### Integration Example
-To integrate the MCP into your agent's behavior, check the **[AGENTS.md](AGENTS.md)** file for a complete template. You can add these instructions to your agent's core rules (e.g., `.cursorrules` or `.windsurfrules`):
-
-> "Always refer to the `directives/` folder for project management SOPs. Use the Plano MCP tools as the source of truth for tracking progress, tasks, and project status."
-
-By doing this, the agent will automatically update its progress in Plano as it completes work, ensuring your project dashboard is always up to date.
 
 ## Recent Changes (Changelog)
 

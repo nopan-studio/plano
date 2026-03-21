@@ -21,6 +21,7 @@ This project follows an agent-friendly architecture that separates concerns betw
 1.  **Use Plano Early & Often**: For any request regarding "progress", "status", or "tasks", immediately consult the `directives/plano_project_oversight.md`.
 2.  **Deterministic over Probabilistic**: Prefer using the Plano database as the source of truth rather than relying on session memory.
 3.  **Update Directives**: If you learn new constraints or better ways to manage the project, update the corresponding markdown file in `directives/`.
+4.  **Tool Exclusivity**: You MUST ONLY use the **Plano MCP** tools for managing tasks, milestones, and project metadata. Avoid using external MCP tools (e.g., GitHub, Search) for internal project logic.
 
 ## Directory Structure
 - `directives/` - Agent SOPs and tactical instructions.

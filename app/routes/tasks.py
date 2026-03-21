@@ -60,6 +60,7 @@ def create_task(pid):
         actual_hours=body.get('actual_hours'),
         tags=json.dumps(body.get('tags', [])),
         files_meta=json.dumps(body.get('files_meta', [])),
+        meta=json.dumps(body.get('meta', {})),
         is_ai_working=bool(body.get('is_ai_working', False)),
     )
     if body.get('due_date'):
@@ -117,6 +118,8 @@ def update_task(pid, tid):
         t.tags = json.dumps(body['tags'])
     if 'files_meta' in body:
         t.files_meta = json.dumps(body['files_meta'])
+    if 'meta' in body:
+        t.meta = json.dumps(body['meta'])
     if 'is_ai_working' in body:
         t.is_ai_working = bool(body['is_ai_working'])
     if 'due_date' in body:
@@ -221,3 +224,30 @@ def get_task_diff(pid, tid):
         })
         
     return ok(diffs)
+
+@tasks_bp.route('/api/projects/<int:pid>/tasks/archive-done', methods=['POST'])
+def archive_done_tasks(pid):
+    db.get_or_404(Project, pid)
+    done_tasks = Task.query.filter_by(project_id=pid, status='done').all()
+    
+    count = 0
+    for t in done_tasks:
+        old = t.to_dict()
+        
+        # Save original status in meta
+        meta = json.loads(t.meta or '{}')
+        meta['original_status'] = t.status
+        t.meta = json.dumps(meta)
+        
+        t.status = 'archived'
+        t.updated_at = datetime.utcnow()
+        new = t.to_dict()
+        log_field_changes(pid, 'task', t.id, old, new)
+        count += 1
+    
+    db.session.commit()
+    
+    # Broadcast update
+    event_bus.broadcast('tasks_archived', {'project_id': pid, 'count': count})
+    
+    return ok({'archived_count': count})

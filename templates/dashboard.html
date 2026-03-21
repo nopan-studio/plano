@@ -17,18 +17,44 @@
     <div class="logo"><img src="/static/logo.png" style="height:24px; vertical-align:middle; margin-right:8px;"/> Plano</div>
     <div class="breadcrumb" id="breadcrumb"></div>
     <div class="top-nav">
-      <a href="/tester">API Tester</a>
     </div>
   </div>
 
   <div class="body">
     <!-- Sidebar -->
     <nav class="sidebar" id="sidebar">
-      <div class="sidebar-hd">Workspace</div>
-      <a href="#/" id="sn-home">🏠 Overview</a>
-      <a href="#/ideas" id="sn-ideas">💡 All Ideas</a>
-      <div class="sidebar-hd" style="margin-top:8px">Projects</div>
-      <div id="sidebar-projects"></div>
+      <a href="#/" id="sn-home" class="nav-item">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Overview
+      </a>
+
+      <div class="sidebar-hd" style="margin-top:16px">
+        Workspaces
+        <button class="add-workspace-btn" onclick="openProjectCreateModal()" title="Add Project">+</button>
+      </div>
+      <div id="sidebar-projects-dropdown" class="workspaces-dropdown">
+        <div class="dropdown-trigger" onclick="toggleWorkspaces()">
+          <span id="active-workspace-name">Select Workspace</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </div>
+        <div id="workspaces-list" class="dropdown-content"></div>
+      </div>
+
+      <div id="sidebar-subnav" class="sidebar-subnav" style="display:none">
+        <!-- Project-specific links rendered here -->
+      </div>
+      
+      <div class="sidebar-footer">
+        <a href="https://github.com/nopan-studio/plano" target="_blank" class="github-card">
+          <span class="github-logo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.041-1.416-4.041-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          </span>
+          <div class="github-info">
+            <span class="gh-label">Contribute</span>
+            <span class="gh-repo">plano</span>
+          </div>
+        </a>
+      </div>
     </nav>
 
     <!-- Main -->
@@ -59,12 +85,74 @@ function toast(msg, cls='ok') {
 
 function esc(s) { const d=document.createElement('div'); d.textContent=String(s??''); return d.innerHTML; }
 function md(s) {
-  // basic markdown: **bold**, *italic*, `code`, newlines
-  return esc(s)
-    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g,'<em>$1</em>')
-    .replace(/`([^`]+)`/g,'<code>$1</code>')
-    .replace(/\n/g,'<br>');
+  if (!s) return '';
+  let res = esc(s);
+
+  // 1. Block code ```...``` - do this before any other processing to avoid breaking content inside
+  res = res.replace(/```([\s\S]*?)```/g, function(match, code) {
+    return `<pre class="md-code-block"><code>${code.trim()}</code></pre>`;
+  });
+
+  // 2. Custom symbols & indicators
+  res = res.replace(/\[x\]/gi, '<span style="color:var(--green)">✅</span>')
+     .replace(/\[ \]/g, '<span style="color:var(--text-dim)">⬜</span>')
+     .replace(/\(!\)/g, '<span title="Blocker">⚠️</span>')
+     .replace(/\(\?\)/g, '<span title="Query">❓</span>')
+     .replace(/\(\*\)/g, '<span style="color:var(--amber)">⭐</span>')
+     .replace(/\(i\)/g, '<span style="color:var(--blue)">ℹ️</span>')
+     .replace(/\(v\)/gi, '<span style="color:var(--green)">✅</span>')
+     .replace(/\(x\)/gi, '<span style="color:var(--rose)">❌</span>');
+
+  // 3. Text formatting (Inline)
+  res = res.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+     .replace(/\*(.+?)\*/g, '<em>$1</em>')
+     .replace(/~~(.+?)~~/g, '<del>$1</del>')
+     .replace(/`([^`\n]+)`/g, '<code>$1</code>');
+
+  // 4. Links [text](url)
+  res = res.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" class="md-link">$1</a>');
+
+  // 5. Line-based processing
+  const lines = res.split('\n');
+  const processed = [];
+  
+  for (let line of lines) {
+    let l = line.trim();
+    
+    // Horizontal Rule
+    if (l === '---') {
+      processed.push('<hr class="md-hr">');
+      continue;
+    }
+
+    // Hashtags
+    line = line.replace(/(^|\s)#(\w+)/g, '$1<span class="md-tag">#$2</span>');
+
+    // Headers
+    if (l.startsWith('# ')) {
+      processed.push(`<h3 class="md-h1">${l.substring(2)}</h3>`);
+    } else if (l.startsWith('## ')) {
+      processed.push(`<h4 class="md-h2">${l.substring(3)}</h4>`);
+    } else if (l.startsWith('### ')) {
+      processed.push(`<h5 class="md-h3">${l.substring(4)}</h5>`);
+    }
+    // Blockquote
+    else if (l.startsWith('> ')) {
+      processed.push(`<blockquote class="md-quote">${l.substring(2)}</blockquote>`);
+    }
+    // Lists
+    else if (l.startsWith('- ') || l.startsWith('* ')) {
+      processed.push(`<div class="md-li"><span>•</span> ${l.substring(2)}</div>`);
+    } else if (/^\d+\.\s/.test(l)) {
+      processed.push(`<div class="md-li"><span>${l.split('.')[0]}.</span> ${l.split('.').slice(1).join('.').trim()}</div>`);
+    }
+    // Regular line
+    else {
+      processed.push(line ? `<div>${line}</div>` : '<div style="height:8px"></div>');
+    }
+  }
+
+  return processed.join('');
 }
 
 function fmtDate(s) { return s ? new Date(s).toLocaleDateString() : '—'; }
@@ -118,10 +206,11 @@ function route() {
     proj:  hash.match(/^#\/projects\/(\d+)$/),
     tasks: hash.match(/^#\/projects\/(\d+)\/tasks$/),
     milestones: hash.match(/^#\/projects\/(\d+)\/milestones$/),
-    changelog:  hash.match(/^#\/projects\/(\d+)\/changelog$/),
+    changelog:  hash.match(/^#\/projects\/(\d+)\/project-logs$/),
     updates:    hash.match(/^#\/projects\/(\d+)\/updates$/),
     pideas:     hash.match(/^#\/projects\/(\d+)\/ideas$/),
     boards:     hash.match(/^#\/projects\/(\d+)\/boards$/),
+    archive:    hash.match(/^#\/projects\/(\d+)\/archive$/),
   };
   if      (m.home)       renderHome();
   else if (m.ideas)      renderAllIdeas();
@@ -131,24 +220,92 @@ function route() {
   else if (m.updates)    renderUpdates(+m.updates[1]);
   else if (m.pideas)     renderIdeas(+m.pideas[1]);
   else if (m.boards)     renderBoards(+m.boards[1]);
+  else if (m.archive)    renderArchive(+m.archive[1]);
   else if (m.proj)       renderProject(+m.proj[1]);
   else                   renderHome();
+  
+  if (typeof renderSidebar === 'function') renderSidebar();
 }
 window.addEventListener('hashchange', route);
 
 // ── Sidebar ───────────────────────────────────────────────────
+function toggleWorkspaces() {
+  document.getElementById('workspaces-list').classList.toggle('show');
+}
+
+// Close dropdown on click outside
+window.addEventListener('click', e => {
+  if (!e.target.closest('.workspaces-dropdown')) {
+    document.getElementById('workspaces-list').classList.remove('show');
+  }
+});
+
 async function loadSidebar() {
   _projects = await api('GET', '/api/projects');
-  const el = document.getElementById('sidebar-projects');
-  el.innerHTML = _projects.map(p =>
-    `<a href="#/projects/${p.id}" data-pid="${p.id}">${esc(p.name)}
+  renderSidebar();
+}
+
+function renderSidebar() {
+  const listEl = document.getElementById('workspaces-list');
+  const activeNameEl = document.getElementById('active-workspace-name');
+  if (!listEl) return;
+  
+  listEl.innerHTML = _projects.map(p =>
+    `<a href="#/projects/${p.id}" data-pid="${p.id}" onclick="toggleWorkspaces()">${esc(p.name)}
       <span class="badge">${p.task_count||0}</span>
     </a>`
   ).join('');
-  // highlight active
-  document.querySelectorAll('.sidebar a').forEach(a => {
-    a.classList.toggle('act', a.getAttribute('href') === location.hash || (location.hash===''&&a.getAttribute('href')==='#/'));
+
+  // Update active workspace name
+  const pid = getActivePidFromUrl();
+  const current = _projects.find(p => p.id === pid);
+  if (current) {
+    activeNameEl.textContent = current.name;
+    renderSidebarSubnav(pid);
+  } else {
+    activeNameEl.textContent = 'Select Workspace';
+    document.getElementById('sidebar-subnav').style.display = 'none';
+  }
+
+  // Highlight active items
+  const curHash = location.hash || '#/';
+  document.querySelectorAll('.sidebar a, .nav-item, .subnav-item').forEach(a => {
+    const href = a.getAttribute('href');
+    a.classList.toggle('act', href === curHash || (curHash==='' && href==='#/'));
   });
+}
+
+function getActivePidFromUrl() {
+  const m = location.hash.match(/^#\/projects\/(\d+)/);
+  return m ? +m[1] : null;
+}
+
+const sidebarIcons = {
+  Overview: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v18H3zM3 9h18M9 21V9"/></svg>`,
+  Tasks: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>`,
+  Milestones: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>`,
+  Boards: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>`,
+  Updates: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
+  Ideas: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>`,
+  'Project Logs': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>`,
+  Archive: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect width="22" height="5" x="1" y="3"/><line x1="10" y1="12" x2="14" y2="12"/></svg>`
+};
+
+function renderSidebarSubnav(pid) {
+  const subnav = document.getElementById('sidebar-subnav');
+  const curHash = location.hash;
+  const tabs = ['Overview', 'Tasks', 'Milestones', 'Boards', 'Updates', 'Archive', 'Project Logs'];
+  
+  subnav.innerHTML = `
+    <div class="sidebar-hd">Navigation</div>
+    ${tabs.map(t => {
+      const slug = t.toLowerCase().replace(' ', '-');
+      const href = slug === 'overview' ? `#/projects/${pid}` : `#/projects/${pid}/${slug}`;
+      const isAct = curHash === href;
+      return `<a href="${href}" class="subnav-item ${isAct ? 'act' : ''}">${sidebarIcons[t]||''} ${t}</a>`;
+    }).join('')}
+  `;
+  subnav.style.display = 'block';
 }
 
 function setBreadcrumb(items) {
@@ -159,45 +316,17 @@ function setBreadcrumb(items) {
       : `<span>${esc(it.label)}</span>`
   ).join('');
 }
-function setSidebarActive(href) {
-  document.querySelectorAll('.sidebar a').forEach(a =>
-    a.classList.toggle('act', a.getAttribute('href') === href));
-}
 
 // ── Helpers ───────────────────────────────────────────────────
 function view(html) {
-  return new Promise(resolve => {
-    if (document.startViewTransition) {
-      document.startViewTransition(() => {
-        document.getElementById('main-view').innerHTML = html;
-        resolve();
-      });
-    } else {
-      document.getElementById('main-view').innerHTML = html;
-      resolve();
-    }
-  });
+  document.getElementById('main-view').innerHTML = html;
+  return Promise.resolve();
 }
 
-function projectNavTabs(pid, active) {
-  const tabs = [
-    ['Overview','#/projects/'+pid],
-    ['Tasks','#/projects/'+pid+'/tasks'],
-    ['Milestones','#/projects/'+pid+'/milestones'],
-    ['Updates','#/projects/'+pid+'/updates'],
-    ['Changelog','#/projects/'+pid+'/changelog'],
-    ['Ideas','#/projects/'+pid+'/ideas'],
-    ['Boards','#/projects/'+pid+'/boards'],
-  ];
-  return `<div class="tabs">${tabs.map(([l,h])=>
-    `<a class="tab${active===l?' act':''}" href="${h}">${l}</a>`
-  ).join('')}</div>`;
-}
 
 // ── HOME ──────────────────────────────────────────────────────
 async function renderHome() {
   setBreadcrumb([{label:'Overview'}]);
-  setSidebarActive('#/');
   await loadSidebar();
   const projects = _projects;
 
@@ -207,29 +336,17 @@ async function renderHome() {
 
   view(`
     <div class="page-hd">
-      <div><h1>Overview</h1><div class="sub">${projects.length} projects</div></div>
-      <button class="btn btn-acc btn-sm" style="margin-left:auto" onclick="showCreateProject()">+ New Project</button>
+      <div>
+        <h1>Overview</h1>
+        <div class="sub">At-a-glance view of all project statuses and team progress</div>
+      </div>
+      <button class="btn btn-acc btn-sm" style="margin-left:auto" onclick="openProjectCreateModal()">+ New Project</button>
     </div>
     <div class="stat-row">
       <div class="stat"><div class="stat-v">${projects.length}</div><div class="stat-l">Projects</div></div>
       <div class="stat"><div class="stat-v">${totalActive}</div><div class="stat-l">Active</div></div>
       <div class="stat"><div class="stat-v">${totalDone}</div><div class="stat-l">Completed</div></div>
       <div class="stat"><div class="stat-v">${totalTasks}</div><div class="stat-l">Total Tasks</div></div>
-    </div>
-    <div id="create-project-form" style="display:none" class="form-card">
-      <h3>New Project</h3>
-      <div class="form-row">
-        <input id="pf-name" type="text" placeholder="Project name" style="flex:2">
-        <select id="pf-priority" style="flex:1;background:var(--surf);border:1px solid var(--b2);border-radius:var(--r);color:var(--text);font-family:var(--sans);font-size:13px;padding:7px 10px">
-          <option value="low">Low</option><option value="medium" selected>Medium</option>
-          <option value="high">High</option><option value="critical">Critical</option>
-        </select>
-      </div>
-      <div class="form-row"><input id="pf-desc" type="text" placeholder="Description (optional)"></div>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-acc btn-sm" onclick="createProject()">Create</button>
-        <button class="btn btn-out btn-sm" onclick="document.getElementById('create-project-form').style.display='none'">Cancel</button>
-      </div>
     </div>
     <div class="cards" id="project-cards">
       ${projects.length ? projects.map(p => `
@@ -248,22 +365,59 @@ async function renderHome() {
   `);
 }
 
-function showCreateProject() {
-  const f = document.getElementById('create-project-form');
-  if (f) f.style.display = f.style.display==='none' ? '' : 'none';
-}
-async function createProject() {
-  const name = document.getElementById('pf-name').value.trim();
-  if (!name) return toast('Name required','err');
-  const data = await api('POST','/api/projects',{
-    name, priority:document.getElementById('pf-priority').value,
-    description:document.getElementById('pf-desc').value.trim(), status:'planning'
+window.openProjectCreateModal = function() {
+  document.getElementById('detail-modal-root').innerHTML = `
+    <div class="detail-overlay" onclick="if(event.target===this)closeDetailModal()">
+      <div class="detail-modal">
+        <div class="dm-header">
+          <div class="dm-header-icon">📁</div>
+          <div class="dm-header-body">
+            <h2>Create New Project</h2>
+          </div>
+          <button class="dm-close" onclick="closeDetailModal()">✕</button>
+        </div>
+        <div class="dm-body">
+          <div class="dm-section">
+            <label class="dm-section-label">Project Name</label>
+            <input type="text" id="np-name" placeholder="Enter project name">
+          </div>
+          <div class="dm-section">
+            <label class="dm-section-label">Priority</label>
+            <select id="np-priority" class="full">
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High</option>
+              <option value="critical">Critical</option>
+            </select>
+          </div>
+          <div class="dm-section">
+            <label class="dm-section-label">Description</label>
+            <textarea id="np-desc" placeholder="A brief overview of the project"></textarea>
+          </div>
+        </div>
+        <div class="dm-footer">
+          <button class="btn btn-out btn-sm" onclick="closeDetailModal()">Cancel</button>
+          <button class="btn btn-acc btn-sm" onclick="saveNewProject()">Create Project</button>
+        </div>
+      </div>
+    </div>`;
+};
+
+window.saveNewProject = async function() {
+  const name = document.getElementById('np-name').value.trim();
+  if (!name) return toast('Name required', 'err');
+  const d = await api('POST', '/api/projects', {
+    name, 
+    priority: document.getElementById('np-priority').value,
+    description: document.getElementById('np-desc').value.trim(),
+    status: 'planning'
   });
-  if (data.error) return toast(data.error,'err');
+  if (d.error) return toast(d.error, 'err');
   toast('Project created!');
+  closeDetailModal();
   await loadSidebar();
-  location.hash = '#/projects/'+data.id;
-}
+  location.hash = '#/projects/' + d.id;
+};
 
 // ── PROJECT OVERVIEW ──────────────────────────────────────────
 async function renderProject(pid) {
@@ -276,34 +430,38 @@ async function renderProject(pid) {
   setActiveProject({id:pid, name:proj.name});
   window._pid = pid;
   setBreadcrumb([{label:'Overview',href:'#/'},{label:proj.name}]);
-  setSidebarActive(`#/projects/${pid}`);
 
   const byStatus = dash.tasks_by_status || {};
   view(`
     <div class="page-hd">
       <div>
         <h1>${esc(proj.name)}</h1>
-        <div class="sub">${esc(proj.description||'')}</div>
+        <div class="sub">Project overview, metrics, and latest workspace activity</div>
       </div>
       <div style="display:flex;gap:8px;margin-left:auto;align-items:center">
         <span class="badge s-${proj.status}">${proj.status}</span>
         <span class="badge p-${proj.priority}">● ${proj.priority}</span>
-        <button class="btn btn-ghost btn-sm" onclick="deleteProject(${pid})" title="Delete project">🗑</button>
+        <button class="btn btn-ghost btn-sm" onclick="deleteProject(${pid})" title="Delete project"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></button>
       </div>
     </div>
-    ${projectNavTabs(pid,'Overview')}
-    <div class="stat-row">
-      <div class="stat"><div class="stat-v">${dash.tasks_total}</div><div class="stat-l">Tasks</div></div>
-      <div class="stat"><div class="stat-v">${byStatus.done||0}</div><div class="stat-l">Done</div></div>
-      <div class="stat"><div class="stat-v">${byStatus.in_progress||0}</div><div class="stat-l">In Progress</div></div>
-      <div class="stat"><div class="stat-v">${dash.milestones_total}</div><div class="stat-l">Milestones</div></div>
-      <div class="stat"><div class="stat-v">${dash.boards_total}</div><div class="stat-l">Boards</div></div>
-      <div class="stat"><div class="stat-v">${proj.progress_pct||0}%</div><div class="stat-l">Progress</div></div>
+
+    <div class="section-hd">About Project</div>
+    <div class="prose-wrap" style="margin-bottom:24px; font-size:15px; line-height:1.8; color:var(--text); opacity:0.85; max-width:100%">
+      ${md(proj.description || '*No detailed description provided.*')}
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="stat-row">
+      <div class="stat"><div class="stat-v">${dash.tasks_total}</div><div class="stat-l">Total Tasks</div></div>
+      <div class="stat"><div class="stat-v">${byStatus.done||0}</div><div class="stat-l">Completed</div></div>
+      <div class="stat"><div class="stat-v">${byStatus.in_progress||0}</div><div class="stat-l">Active</div></div>
+      <div class="stat"><div class="stat-v">${dash.milestones_total}</div><div class="stat-l">Milestones</div></div>
+      <div class="stat"><div class="stat-v">${dash.boards_total}</div><div class="stat-l">Boards</div></div>
+      <div class="stat"><div class="stat-v">${proj.progress_pct||0}%</div><div class="stat-l">Work Progress</div></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:24px;margin-top:24px">
       <div>
-        <div class="section-hd">Project Details</div>
+        <div class="section-hd">Workspace Metadata</div>
         <div class="form-card">
           <div class="dm-field-row">
             <div class="dm-field">
@@ -325,41 +483,34 @@ async function renderProject(pid) {
               <input type="date" value="${proj.target_date||''}" onchange="patchProject(${pid},{target_date:this.value})">
             </div>
           </div>
-          <button class="btn btn-out btn-sm" style="width:100%;margin-top:8px" onclick="openProjectEditModal(${pid})">✏️ Full Edit</button>
-        </div>
-
-        <div class="section-hd">Integrations & Portability</div>
-        <div class="form-card">
-          <div style="display:flex;gap:8px;margin-bottom:12px">
-            <button class="btn btn-out btn-sm" style="flex:1" onclick="exportProject(${pid})">📤 Export Project</button>
-            <button class="btn btn-out btn-sm" style="flex:1" onclick="document.getElementById('import-input').click()">📥 Import Over...</button>
-            <input type="file" id="import-input" style="display:none" onchange="importProject(this)">
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button class="btn btn-out btn-sm" style="flex:1" onclick="openProjectEditModal(${pid})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg> Full Edit</button>
+            <button class="btn btn-out btn-sm" style="flex:1" onclick="exportProject(${pid})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg> Export</button>
           </div>
-
         </div>
 
-        <div class="section-hd">Milestones</div>
+        <div class="section-hd">Top Milestones</div>
         ${milestones.length ? milestones.slice(0,5).map(m=>`
-          <div class="feed-item" style="margin-bottom:6px">
+          <div class="feed-item" style="margin-bottom:6px; cursor:pointer" onclick="openMilestoneDetail(${pid},${m.id})">
             <div class="feed-dot dot-${m.status==='completed'?'created':m.status==='missed'?'deleted':'updated'}"></div>
             <div class="feed-body">
               <div class="feed-text"><strong>${esc(m.name)}</strong></div>
               <div class="feed-time"><span class="badge s-${m.status}">${m.status}</span> ${m.due_date?'Due '+fmtDate(m.due_date):''}</div>
             </div>
-          </div>`).join('') : '<div class="empty" style="padding:20px"><p>No milestones</p></div>'}
-        <a href="#/projects/${pid}/milestones" style="font-size:12px;color:var(--acc)">View all milestones →</a>
+          </div>`).join('') : '<div class="empty" style="padding:20px"><p>No milestones listed</p></div>'}
+        <a href="#/projects/${pid}/milestones" style="font-size:12px;color:var(--accent);font-weight:600;display:block;margin-top:8px">Expand milestones & timeline →</a>
       </div>
       <div>
-        <div class="section-hd">Recent Activity</div>
+        <div class="section-hd">Workspace Activity</div>
         <div class="feed">
-          ${dash.recent_changes.slice(0,8).map(c=>`
+          ${dash.recent_changes.slice(0,10).map(c=>`
             <div class="feed-item">
               <div class="feed-dot dot-${c.action}"></div>
               <div class="feed-body">
-                <div class="feed-text"><strong>${c.action}</strong> ${c.entity_type}${c.field_changed?' — '+c.field_changed:''}</div>
+                <div class="feed-text"><strong>${c.action.toUpperCase()}</strong> ${c.entity_type}${c.field_changed?' · '+c.field_changed:''}</div>
                 <div class="feed-time">${timeAgo(c.timestamp)}</div>
               </div>
-            </div>`).join('') || '<div style="color:var(--dim);font-size:13px">No activity yet</div>'}
+            </div>`).join('') || '<div style="color:var(--dim);font-size:13px">No recent activity detected.</div>'}
         </div>
       </div>
     </div>
@@ -458,16 +609,15 @@ async function renderTasks(pid) {
   ]);
   setActiveProject({id:pid,name:proj.name});
   setBreadcrumb([{label:'Overview',href:'#/'},{label:proj.name,href:`#/projects/${pid}`},{label:'Tasks'}]);
-  setSidebarActive(`#/projects/${pid}`);
   const msOpts = milestones.map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join('');
-  window._tasks = tasks; window._milestones = milestones;
+  const activeTasks = (tasks||[]).filter(t => t.status !== 'archived');
+  window._tasks = activeTasks; window._milestones = milestones;
 
-  // Apply saved order from localStorage
   const savedOrder = getKanbanOrder(pid);
   function sortByOrder(arr, status) {
     const order = savedOrder[status] || [];
     if (!order.length) return arr;
-    return arr.slice().sort((a, b) => {
+    return arr.slice().sort((a,b) => {
       const ia = order.indexOf(a.id), ib = order.indexOf(b.id);
       if (ia === -1 && ib === -1) return 0;
       if (ia === -1) return 1;
@@ -475,11 +625,11 @@ async function renderTasks(pid) {
       return ia - ib;
     });
   }
-  const todo = sortByOrder(tasks.filter(t=>t.status==='todo'), 'todo');
-  const progress = sortByOrder(tasks.filter(t=>t.status==='in_progress'), 'in_progress');
-  const review = sortByOrder(tasks.filter(t=>t.status==='review'), 'review');
-  const done = sortByOrder(tasks.filter(t=>t.status==='done'), 'done');
-  const bugs = sortByOrder(tasks.filter(t=>t.status==='bugs'), 'bugs');
+  const todo = sortByOrder(activeTasks.filter(t=>t.status==='todo'), 'todo');
+  const progress = sortByOrder(activeTasks.filter(t=>t.status==='in_progress'), 'in_progress');
+  const review = sortByOrder(activeTasks.filter(t=>t.status==='review'), 'review');
+  const done = sortByOrder(activeTasks.filter(t=>t.status==='done'), 'done');
+  const bugs = sortByOrder(activeTasks.filter(t=>t.status==='bugs'), 'bugs');
 
   function kCard(t) {
     const pColor = {low:'var(--dim)',medium:'var(--blue)',high:'var(--amber)',critical:'var(--rose)'}[t.priority]||'var(--dim)';
@@ -487,25 +637,26 @@ async function renderTasks(pid) {
     const aiActive = t.is_ai_working ? ' ai-active' : '';
     const aiBadge = t.is_ai_working ? '<div class="ai-badge"><span></span> AI Working</div>' : '';
     return `<div class="k-card${aiActive}" id="task-${t.id}" style="view-transition-name: task-card-${t.id}" draggable="true" data-task-id="${t.id}" data-status="${t.status}" onclick="openTaskDetail(${pid},${t.id})">
+      <div class="k-card-id">#${t.id}</div>
       ${aiBadge}
       <div class="k-card-title">${esc(t.title)}</div>
       ${t.description?`<div class="k-card-sub">${esc(t.description)}</div>`:''}
       <div class="k-card-chips">
         <span class="chip" style="color:${pColor};background:var(--surf2)">● ${t.priority}</span>
-        ${t.assignee?`<span class="chip chip-assignee">👤 ${esc(t.assignee)}</span>`:''}
-        ${t.due_date?`<span class="chip chip-due">📅 ${fmtDate(t.due_date)}</span>`:''}
-        ${ms?`<span class="chip chip-ms">🏁 ${esc(ms.name)}</span>`:''}
+        ${t.assignee?`<span class="chip chip-assignee"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:-1px"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> ${esc(t.assignee)}</span>`:''}
+        ${t.due_date?`<span class="chip chip-due"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:-1px"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg> ${fmtDate(t.due_date)}</span>`:''}
+        ${ms?`<span class="chip chip-ms"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:-1px"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg> ${esc(ms.name)}</span>`:''}
       </div>
     </div>`;
   }
 
   await view(`
-    <div class="page-hd"><h1>Tasks</h1>
-      <div style="margin-left:auto">
-        <button class="btn btn-acc btn-sm" onclick="toggleTaskForm(${pid})">+ Add Task</button>
+    <div class="page-hd">
+      <div>
+        <h1>Tasks</h1>
+        <div class="sub">Track progress and manage team workflows through columns</div>
       </div>
     </div>
-    ${projectNavTabs(pid,'Tasks')}
     <div id="task-form" class="form-card" style="display:none;margin-bottom:14px">
       <h3>New Task</h3>
       <div class="form-row">
@@ -513,6 +664,9 @@ async function renderTasks(pid) {
         <input id="tf-assignee" type="text" placeholder="Assignee" style="flex:1">
       </div>
       <div class="form-row">
+        <select id="tf-status" style="flex:1;background:var(--surf);border:1px solid var(--b2);border-radius:var(--r);color:var(--text);font-family:var(--sans);font-size:13px;padding:7px 10px">
+          <option value="todo">To Do</option><option value="in_progress">In Progress</option><option value="review">Review</option><option value="done">Done</option><option value="bugs">Bugs</option>
+        </select>
         <select id="tf-priority" style="flex:1;background:var(--surf);border:1px solid var(--b2);border-radius:var(--r);color:var(--text);font-family:var(--sans);font-size:13px;padding:7px 10px">
           <option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option><option value="critical">Critical</option>
         </select>
@@ -529,23 +683,54 @@ async function renderTasks(pid) {
     </div>
     <div class="kanban">
       <div class="kanban-col col-todo">
-        <div class="kanban-col-hd"><h3 style="color:var(--mid)">📋 To Do</h3><span class="cnt">${todo.length}</span></div>
+        <div class="kanban-col-hd">
+          <h3><span class="status-circle"></span> To Do <span class="cnt">${todo.length}</span></h3>
+          <div class="kanban-col-hd-right">
+            <button class="add-task-col-btn" onclick="toggleTaskForm(${pid}, 'todo')" title="Add task to To Do">+</button>
+          </div>
+        </div>
+        <div class="kanban-col-sub">Tasks ready to be started</div>
         <div class="kanban-col-body" data-status="todo">${todo.map(kCard).join('')||'<div style="text-align:center;padding:20px;color:var(--dim);font-size:12px">No tasks</div>'}</div>
       </div>
       <div class="kanban-col col-progress">
-        <div class="kanban-col-hd"><h3 style="color:var(--blue)">🔄 In Progress</h3><span class="cnt">${progress.length}</span></div>
+        <div class="kanban-col-hd">
+          <h3><span class="status-circle"></span> In Progress <span class="cnt">${progress.length}</span></h3>
+          <div class="kanban-col-hd-right">
+            <button class="add-task-col-btn" onclick="toggleTaskForm(${pid}, 'in_progress')" title="Add task to In Progress">+</button>
+          </div>
+        </div>
+        <div class="kanban-col-sub">Work currently being tackled</div>
         <div class="kanban-col-body" data-status="in_progress">${progress.map(kCard).join('')||'<div style="text-align:center;padding:20px;color:var(--dim);font-size:12px">No tasks</div>'}</div>
       </div>
       <div class="kanban-col col-review">
-        <div class="kanban-col-hd"><h3 style="color:var(--amber)">👁️ Review</h3><span class="cnt">${review.length}</span></div>
+        <div class="kanban-col-hd">
+          <h3><span class="status-circle"></span> Review <span class="cnt">${review.length}</span></h3>
+          <div class="kanban-col-hd-right">
+            <button class="add-task-col-btn" onclick="toggleTaskForm(${pid}, 'review')" title="Add task to Review">+</button>
+          </div>
+        </div>
+        <div class="kanban-col-sub">Pending peer approval</div>
         <div class="kanban-col-body" data-status="review">${review.map(kCard).join('')||'<div style="text-align:center;padding:20px;color:var(--dim);font-size:12px">No reviews</div>'}</div>
       </div>
       <div class="kanban-col col-done">
-        <div class="kanban-col-hd"><h3 style="color:var(--green)">✅ Done</h3><span class="cnt">${done.length}</span></div>
+        <div class="kanban-col-hd">
+          <h3><span class="status-circle"></span> Done <span class="cnt">${done.length}</span></h3>
+          <div class="kanban-col-hd-right">
+            ${done.length > 0 ? `<button class="btn btn-ghost btn-xs" onclick="archiveAllDoneTasksUI(${pid})" title="Archive all Done tasks" style="margin-right:4px;padding:2px 6px;font-size:10px;text-transform:uppercase;font-weight:700;color:var(--mid)">Archive All</button>` : ''}
+            <button class="add-task-col-btn" onclick="toggleTaskForm(${pid}, 'done')" title="Add task to Done">+</button>
+          </div>
+        </div>
+        <div class="kanban-col-sub">Completed successfully</div>
         <div class="kanban-col-body" data-status="done">${done.map(kCard).join('')||'<div style="text-align:center;padding:20px;color:var(--dim);font-size:12px">No completed tasks</div>'}</div>
       </div>
       <div class="kanban-col col-bugs">
-        <div class="kanban-col-hd"><h3 style="color:var(--rose)">🐛 Bugs</h3><span class="cnt">${bugs.length}</span></div>
+        <div class="kanban-col-hd">
+          <h3><span class="status-circle"></span> Bugs <span class="cnt">${bugs.length}</span></h3>
+          <div class="kanban-col-hd-right">
+            <button class="add-task-col-btn" onclick="toggleTaskForm(${pid}, 'bugs')" title="Add task to Bugs">+</button>
+          </div>
+        </div>
+        <div class="kanban-col-sub">Issues needing attention</div>
         <div class="kanban-col-body" data-status="bugs">${bugs.map(kCard).join('')||'<div style="text-align:center;padding:20px;color:var(--dim);font-size:12px">No bugs recorded</div>'}</div>
       </div>
     </div>
@@ -555,10 +740,18 @@ async function renderTasks(pid) {
   initKanbanPanning();
 }
 function taskCard() {} // kept for compat
-function toggleTaskForm(pid) {
+function toggleTaskForm(pid, status) {
   const f = document.getElementById('task-form');
-  if (f) f.style.display = f.style.display==='none'?'':'none';
+  if (f) {
+    if (f.style.display === 'none') {
+      f.style.display = '';
+      if (status) document.getElementById('tf-status').value = status;
+    } else {
+      f.style.display = 'none';
+    }
+  }
 }
+
 window.updateTaskStatus = async function(pid, tid, status) {
   const r = await api('PATCH',`/api/projects/${pid}/tasks/${tid}`,{status});
   if (r.error) toast(r.error,'err'); else renderTasks(pid);
@@ -579,7 +772,10 @@ window.createTask = async function(pid) {
   if (mid) body.milestone_id = +mid;
   const due = document.getElementById('tf-due').value;
   if (due) body.due_date = due;
-  const r = await api('POST',`/api/projects/${pid}/tasks`, body);
+  const r = await api('POST',`/api/projects/${pid}/tasks`, {
+    ...body, status: document.getElementById('tf-status').value
+  });
+
   if (r.error) return toast(r.error,'err');
   toast('Task created'); renderTasks(pid);
 };
@@ -599,13 +795,13 @@ window.openTaskDetail = async function(pid, tid) {
     <div class="detail-overlay" onclick="if(event.target===this)closeDetailModal()">
       <div class="detail-modal">
         <div class="dm-header">
-          <div class="dm-header-icon">📌</div>
+          <div class="dm-header-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--blue)"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>
           <div class="dm-header-body">
             <h2>${esc(t.title)}</h2>
             <div class="dm-meta">
               <span class="badge s-${t.status}">${t.status.replace('_',' ')}</span>
               <span class="chip" style="color:${pColor};background:var(--surf2)">● ${t.priority}</span>
-              ${t.assignee?`<span class="chip chip-assignee">👤 ${esc(t.assignee)}</span>`:''}
+              ${t.assignee?`<span class="chip chip-assignee"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:-1px"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> ${esc(t.assignee)}</span>`:''}
             </div>
           </div>
           <button class="dm-close" onclick="closeDetailModal()">✕</button>
@@ -656,6 +852,10 @@ window.openTaskDetail = async function(pid, tid) {
         </div>
         <div class="dm-footer">
           <button class="btn btn-ghost btn-sm" style="color:var(--rose)" onclick="deleteTask(${pid},${tid})">Delete</button>
+          ${(t.status === 'done' || t.status === 'review') 
+            ? `<button class="btn btn-ghost btn-sm" id="dm-archive-btn" style="margin-right:auto" onclick="archiveTask(${pid},${tid})">Archive</button>` 
+            : `<button class="btn btn-ghost btn-sm" style="margin-right:auto;opacity:0.5" disabled title="Task must be Done or Review to archive">Archive</button>`
+          }
           <button class="btn btn-acc btn-sm" onclick="saveTaskDetail(${pid},${tid})">Save Changes</button>
         </div>
       </div>
@@ -680,12 +880,97 @@ window.saveTaskDetail = async function(pid, tid) {
   toast('Task updated'); closeDetailModal(); renderTasks(pid);
 };
 
-// ── MILESTONES ────────────────────────────────────────────────
+window.archiveTask = async function(pid, tid) {
+  let t = (window._tasks||[]).find(x=>x.id===tid);
+  if (!t) {
+    // Try to fetch from API if not in cache (e.g. if viewing archived task or after refresh)
+    t = await api('GET', `/api/projects/${pid}/tasks/${tid}`);
+  }
+  if (!t) return toast('Task not found','err');
+  if (t.status === 'archived') return toast('Task is already archived');
+  
+  const orgStatus = t.status;
+  const r = await api('PATCH', `/api/projects/${pid}/tasks/${tid}`, {
+    status: 'archived',
+    meta: { ...(t.meta||{}), original_status: orgStatus }
+  });
+  if (r.error) return toast(r.error,'err');
+  toast('Task archived'); closeDetailModal(); renderTasks(pid);
+};
+
+window.archiveAllDoneTasksUI = async function(pid) {
+  if (!confirm('Archive all tasks in the Done column?')) return;
+  const r = await api('POST', `/api/projects/${pid}/tasks/archive-done`);
+  if (r.error) return toast(r.error, 'err');
+  toast(`${r.count} tasks archived`);
+  renderTasks(pid);
+};
+
+window.renderArchive = async function(pid) {
+  const [proj, tasks] = await Promise.all([api('GET', `/api/projects/${pid}`), api('GET', `/api/projects/${pid}/tasks`)]);
+  setActiveProject({id:pid,name:proj.name});
+  setBreadcrumb([{label:'Overview',href:'#/'},{label:proj.name,href:`#/projects/${pid}`},{label:'Archive'}]);
+  
+  const archived = (tasks||[]).filter(t => t.status === 'archived');
+  
+  const sF = document.getElementById('af-status')?.value || 'all';
+  const dF = document.getElementById('af-df')?.value || '';
+  const dT = document.getElementById('af-dt')?.value || '';
+  
+  let filtered = archived;
+  if (sF !== 'all') filtered = filtered.filter(t => ((t.meta||{}).original_status === sF));
+  if (dF) filtered = filtered.filter(t => t.updated_at.split('T')[0] >= dF);
+  if (dT) filtered = filtered.filter(t => t.updated_at.split('T')[0] <= dT);
+
+  const rows = filtered.map(t => {
+    const meta = t.meta || {};
+    const orig = meta.original_status || 'todo';
+    return `<tr class="t-row">
+      <td>
+        <div class="k-card-id">#${t.id}</div>
+        <div style="font-weight:600;color:var(--text)">${esc(t.title)}</div>
+        <div style="font-size:11px;color:var(--mid);margin-top:2px">${esc(t.description||'')}</div>
+      </td>
+      <td><span class="badge s-${orig}">${orig}</span></td>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--mid)">${fmtDate(t.updated_at)}</td>
+      <td style="text-align:right"><button class="btn btn-out btn-sm" onclick="event.stopPropagation();restoreTask(${pid},${t.id},'${orig}')">Restore</button></td>
+    </tr>`;
+  }).join('');
+
+  await view(`
+    <div class="page-hd">
+      <div>
+        <h1>Archived Tasks</h1>
+        <div class="sub">Manage and restore archive tasks. Filter by original status or date.</div>
+      </div>
+    </div>
+    <div class="form-card" style="margin-bottom:16px;display:flex;gap:12px;align-items:flex-end">
+      <div class="dm-field"><label>Original Status</label><select id="af-status" onchange="renderArchive(${pid})">
+        <option value="all" ${sF==='all'?'selected':''}>All statuses</option>
+        ${['todo','in_progress','review','done','bugs'].map(s=>`<option value="${s}" ${sF===s?'selected':''}>${s}</option>`).join('')}
+      </select></div>
+      <div class="dm-field"><label>From Date</label><input type="date" id="af-df" value="${dF}" onchange="renderArchive(${pid})"></div>
+      <div class="dm-field"><label>To Date</label><input type="date" id="af-dt" value="${dT}" onchange="renderArchive(${pid})"></div>
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('af-status').value='all';document.getElementById('af-df').value='';document.getElementById('af-dt').value='';renderArchive(${pid})">Clear</button>
+    </div>
+    <div style="background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 12px 32px rgba(0,0,0,0.15)">
+      <table class="tbl">
+        <thead><tr><th>Task Name</th><th style="width:140px">Previous Status</th><th style="width:140px">Archived On</th><th style="text-align:right;width:100px">Action</th></tr></thead>
+        <tbody>${rows || '<tr><td colspan="4" style="text-align:center;padding:60px 20px;color:var(--mid)"><div style="font-size:24px;margin-bottom:12px;opacity:0.3">◈</div>No archived tasks found</td></tr>'}</tbody>
+      </table>
+    </div>
+  `);
+};
+
+window.restoreTask = async function(pid, tid, orig) {
+  const r = await api('PATCH', `/api/projects/${pid}/tasks/${tid}`, { status: orig || 'todo' });
+  if (r.error) return toast(r.error,'err');
+  toast('Task restored'); renderArchive(pid);
+};
 async function renderMilestones(pid) {
   const [proj, ms] = await Promise.all([api('GET',`/api/projects/${pid}`), api('GET',`/api/projects/${pid}/milestones`)]);
   setActiveProject({id:pid,name:proj.name});
   setBreadcrumb([{label:'Overview',href:'#/'},{label:proj.name,href:`#/projects/${pid}`},{label:'Milestones'}]);
-  setSidebarActive(`#/projects/${pid}`);
   window._milestones_data = ms;
 
   const pending = ms.filter(m=>m.status==='pending');
@@ -701,17 +986,20 @@ async function renderMilestones(pid) {
       </div>
       ${m.description?`<div class="k-card-sub">${esc(m.description)}</div>`:''}
       <div class="k-card-chips">
-        ${m.due_date?`<span class="chip chip-due">📅 ${fmtDate(m.due_date)}</span>`:''}
-        ${m.task_count?`<span class="chip" style="background:var(--surf2);color:var(--mid)">✅ ${m.task_count}</span>`:''}
+        ${m.due_date?`<span class="chip chip-due"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:-1px"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg> ${fmtDate(m.due_date)}</span>`:''}
+        ${m.task_count?`<span class="chip" style="background:var(--surf2);color:var(--mid)"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:-1px"><polyline points="20 6 9 17 4 12"/></svg> ${m.task_count}</span>`:''}
       </div>
     </div>`;
   }
 
   await view(`
-    <div class="page-hd"><h1>Milestones</h1>
+    <div class="page-hd">
+      <div>
+        <h1>Milestones</h1>
+        <div class="sub">Track high-level achievements and key project markers</div>
+      </div>
       <button class="btn btn-acc btn-sm" style="margin-left:auto" onclick="document.getElementById('ms-form').style.display=''">+ Milestone</button>
     </div>
-    ${projectNavTabs(pid,'Milestones')}
     <div id="ms-form" class="form-card" style="display:none;margin-bottom:14px">
       <h3>New Milestone</h3>
       <div class="form-row">
@@ -726,15 +1014,24 @@ async function renderMilestones(pid) {
     </div>
     <div class="kanban">
       <div class="kanban-col col-todo">
-        <div class="kanban-col-hd"><h3 style="color:var(--mid)">⏳ Pending</h3><span class="cnt">${pending.length}</span></div>
+        <div class="kanban-col-hd">
+          <h3><span class="status-circle"></span> Pending <span class="cnt">${pending.length}</span></h3>
+        </div>
+        <div class="kanban-col-sub">Upcoming project goals</div>
         <div class="kanban-col-body">${pending.map(mCard).join('')||'<div style="text-align:center;padding:20px;color:var(--dim);font-size:12px">None</div>'}</div>
       </div>
       <div class="kanban-col col-progress">
-        <div class="kanban-col-hd"><h3 style="color:var(--blue)">🔄 In Progress</h3><span class="cnt">${active.length}</span></div>
+        <div class="kanban-col-hd">
+          <h3><span class="status-circle"></span> In Progress <span class="cnt">${active.length}</span></h3>
+        </div>
+        <div class="kanban-col-sub">Currently tracking</div>
         <div class="kanban-col-body">${active.map(mCard).join('')||'<div style="text-align:center;padding:20px;color:var(--dim);font-size:12px">None</div>'}</div>
       </div>
       <div class="kanban-col col-done">
-        <div class="kanban-col-hd"><h3 style="color:var(--green)">✅ Completed</h3><span class="cnt">${closed.length}</span></div>
+        <div class="kanban-col-hd">
+          <h3><span class="status-circle"></span> Completed <span class="cnt">${closed.length}</span></h3>
+        </div>
+        <div class="kanban-col-sub">Achieved targets</div>
         <div class="kanban-col-body">${closed.map(mCard).join('')||'<div style="text-align:center;padding:20px;color:var(--dim);font-size:12px">None</div>'}</div>
       </div>
     </div>
@@ -757,13 +1054,13 @@ window.openMilestoneDetail = async function(pid, mid) {
     <div class="detail-overlay" onclick="if(event.target===this)closeDetailModal()">
       <div class="detail-modal">
         <div class="dm-header">
-          <div class="dm-header-icon">🏁</div>
+          <div class="dm-header-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--purple)"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg></div>
           <div class="dm-header-body">
             <h2>${esc(m.name)}</h2>
-            <div class="dm-meta">
+            <div class="dm-meta-row" style="display:flex;gap:12px">
               <span class="badge s-${m.status}">${m.status.replace('_',' ')}</span>
-              ${m.due_date?`<span class="chip chip-due">📅 ${fmtDate(m.due_date)}</span>`:''}
-              ${m.task_count?`<span class="chip" style="background:var(--surf2);color:var(--mid)">${m.task_count} tasks</span>`:''}
+              ${m.due_date?`<span class="chip chip-due"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:-1px"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg> ${fmtDate(m.due_date)}</span>`:''}
+              ${m.task_count?`<div class="dm-stat"><label>Tasks</label><span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:-1.5px"><polyline points="20 6 9 17 4 12"/></svg> ${m.task_count}</span></div>`:''}
             </div>
           </div>
           <button class="dm-close" onclick="closeDetailModal()">✕</button>
@@ -813,7 +1110,7 @@ async function renderChangelog(pid) {
     api('GET',`/api/projects/${pid}/boards`),
   ]);
   setActiveProject({id:pid,name:proj.name});
-  setBreadcrumb([{label:'Overview',href:'#/'},{label:proj.name,href:`#/projects/${pid}`},{label:'Changelog'}]);
+  setBreadcrumb([{label:'Overview',href:'#/'},{label:proj.name,href:`#/projects/${pid}`},{label:'Project Logs'}]);
   window._recent_changelog = cl.entries;
 
   // Build name lookup maps
@@ -833,7 +1130,14 @@ async function renderChangelog(pid) {
     const day = new Date(c.timestamp).toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
     (grouped[day] = grouped[day]||[]).push(c);
   });
-  const entityIcons = {project:'📁',task:'✅',milestone:'🏁',board:'📋',update:'💬',idea:'💡'};
+  const entityIcons = {
+    project: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:-2.5px"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>`,
+    task: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:-2.5px"><polyline points="20 6 9 17 4 12"/></svg>`,
+    milestone: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:-2.5px"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg>`,
+    board: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:-2.5px"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>`,
+    update: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:-2.5px"><path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"/></svg>`,
+    idea: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:-2.5px"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>`
+  };
 
   function clSummary(c) {
     const name = entityName(c.entity_type, c.entity_id);
@@ -845,10 +1149,13 @@ async function renderChangelog(pid) {
   }
 
   view(`
-    <div class="page-hd"><h1>Changelog</h1>
+    <div class="page-hd">
+      <div>
+        <h1>Project Logs</h1>
+        <div class="sub">A chronological audit trail of all manual and AI modifications</div>
+      </div>
       <span style="font-size:12px;color:var(--mid);margin-left:auto;font-family:var(--mono)">${cl.total} entries</span>
     </div>
-    ${projectNavTabs(pid,'Changelog')}
     <div class="prose-wrap">
       ${Object.keys(grouped).length ? Object.entries(grouped).map(([day,entries])=>`
         <div class="cl-day">
@@ -864,57 +1171,137 @@ async function renderChangelog(pid) {
               </div>
               <div class="cl-time">${timeAgo(c.timestamp)}<br>${new Date(c.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div>
             </div>`).join('')}
-        </div>`).join('') : '<div class="empty"><div class="icon">📜</div><p>No changes logged yet</p></div>'}
+        </div>`).join('') : '<div class="empty"><div class="icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.3"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg></div><p>No changes logged yet</p></div>'}
     </div>
   `);
 }
 
 // ── UPDATES ───────────────────────────────────────────────────
 async function renderUpdates(pid) {
-  const [proj, updates] = await Promise.all([api('GET',`/api/projects/${pid}`),api('GET',`/api/projects/${pid}/updates`)]);
+  const [proj, updates, tasks] = await Promise.all([
+    api('GET',`/api/projects/${pid}`),
+    api('GET',`/api/projects/${pid}/updates`),
+    api('GET',`/api/projects/${pid}/tasks`)
+  ]);
   setActiveProject({id:pid,name:proj.name});
   setBreadcrumb([{label:'Overview',href:'#/'},{label:proj.name,href:`#/projects/${pid}`},{label:'Updates'}]);
+  
+  window._project_tasks = tasks;
+
   view(`
-    <div class="page-hd"><h1>Updates</h1></div>
-    ${projectNavTabs(pid,'Updates')}
-    <div class="prose-wrap">
-      <div class="form-card" style="margin-bottom:20px">
-        <h3>Post Update</h3>
-        <div class="form-row">
-          <select id="uf-type" style="flex:1;background:var(--surf);border:1px solid var(--b2);border-radius:var(--r);color:var(--text);font-family:var(--sans);font-size:13px;padding:7px 10px">
-            <option value="progress">Progress</option><option value="blocker">Blocker</option>
-            <option value="decision">Decision</option><option value="note">Note</option>
-          </select>
-        </div>
-        <div class="form-row"><textarea id="uf-content" placeholder="What's happening? Supports **bold**, *italic*, \`code\`."></textarea></div>
-        <button class="btn btn-acc btn-sm" onclick="postUpdate(${pid})">Post</button>
+    <div class="page-hd">
+      <div>
+        <h1>Updates</h1>
+        <div class="sub"> workspace progress and important team decisions</div>
       </div>
+      <button class="btn btn-acc btn-sm" style="margin-left:auto" onclick="openPostUpdateModal(${pid})">+ Update</button>
+    </div>
+    <div class="prose-wrap">
       <div id="updates-feed">
-        ${updates.length ? updates.map(u=>`
-          <div class="update-post" style="cursor:pointer" onclick="openUpdateDetail(${pid},${u.id})">
+        ${updates.length ? updates.map(u=>{
+          const t = tasks.find(x=>x.id===u.task_id);
+          const fileCount = u.files_meta ? u.files_meta.length : 0;
+          return `
+          <div class="update-post">
             <div class="update-post-header">
               <span class="update-type-pill up-${u.update_type}">${u.update_type}</span>
               <span class="update-meta">${timeAgo(u.created_at)} · ${new Date(u.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</span>
+              <button class="up-del-btn" onclick="deleteUpdate(${pid},${u.id})" title="Delete Update"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></button>
             </div>
             <div class="update-body">${md(u.content)}</div>
-          </div>`).join('') : '<div class="empty"><div class="icon">📝</div><p>No updates posted yet</p></div>'}
+            <div class="update-post-footer" style="margin-top:12px; display:flex; gap:12px; border-top:1px solid var(--border); padding-top:10px; font-size:11px; color:var(--mid); flex-wrap:wrap">
+               ${t ? `<span title="Linked Task" style="display:flex;align-items:center;gap:4px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--blue)"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg> ${esc(t.title)}</span>` : ''}
+               ${(t && t.tags && t.tags.length) ? t.tags.map(tag => `<span class="md-tag">#${tag}</span>`).join('') : ''}
+               ${fileCount > 0 ? `<span title="Files Affected" style="display:flex;align-items:center;gap:4px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg> ${fileCount} files</span>` : ''}
+            </div>
+          </div>`;
+        }).join('') : '<div class="empty"><div class="icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.3"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div><p>No updates posted yet</p></div>'}
       </div>
     </div>
   `);
 }
-window.postUpdate = async function(pid){
-  const content=document.getElementById('uf-content').value.trim(); if(!content) return toast('Content required','err');
-  const r=await api('POST',`/api/projects/${pid}/updates`,{content,update_type:document.getElementById('uf-type').value});
-  if(r.error) return toast(r.error,'err'); toast('Posted'); renderUpdates(pid);
-};
-window.deleteUpdate = async function(pid,uid){ await api('DELETE',`/api/projects/${pid}/updates/${uid}`); toast('Deleted'); closeDetailModal(); renderUpdates(pid); };
 
-window.openUpdateDetail = function(pid, uid) {
-  // We need to find the update data — re-fetch updates
-  api('GET',`/api/projects/${pid}/updates`).then(updates => {
-    const u = updates.find(x=>x.id===uid);
-    if (!u) return;
-    document.getElementById('detail-modal-root').innerHTML = `
+window.openPostUpdateModal = function(pid) {
+  const tasks = window._project_tasks || [];
+  const taskOpts = tasks.map(t => `<option value="${t.id}">${esc(t.title)}</option>`).join('');
+  
+  document.getElementById('detail-modal-root').innerHTML = `
+    <div class="detail-overlay" onclick="if(event.target===this)closeDetailModal()">
+      <div class="detail-modal">
+        <div class="dm-header">
+          <div class="dm-header-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--green)"><path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"/></svg></div>
+          <div class="dm-header-body">
+            <h2>Post Update</h2>
+            <div class="dm-meta">Add a progress update for the team</div>
+          </div>
+          <button class="dm-close" onclick="closeDetailModal()">✕</button>
+        </div>
+        <div class="dm-body">
+          <div class="dm-field-row">
+            <div class="dm-field">
+              <label>Update Type</label>
+              <select id="uf-type">
+                <option value="progress">Progress</option>
+                <option value="blocker">Blocker</option>
+                <option value="decision">Decision</option>
+                <option value="note">Note</option>
+              </select>
+            </div>
+            <div class="dm-field">
+              <label>Link to Task (Optional)</label>
+              <select id="uf-task"><option value="">None</option>${taskOpts}</select>
+            </div>
+          </div>
+          <div class="dm-section">
+            <label class="dm-section-label">Content</label>
+            <textarea id="uf-content" placeholder="What's happening? Supports **bold**, *italic*, \`code\`." style="min-height:120px"></textarea>
+          </div>
+        </div>
+        <div class="dm-footer">
+          <button class="btn btn-out btn-sm" onclick="closeDetailModal()">Cancel</button>
+          <button class="btn btn-acc btn-sm" onclick="submitUpdate(${pid})">Post Update</button>
+        </div>
+      </div>
+    </div>`;
+};
+
+window.submitUpdate = async function(pid) {
+  const content = document.getElementById('uf-content').value.trim();
+  if (!content) return toast('Content required', 'err');
+  
+  const body = {
+    content,
+    update_type: document.getElementById('uf-type').value,
+  };
+  
+  const tid = document.getElementById('uf-task').value;
+  if (tid) body.task_id = +tid;
+
+  const r = await api('POST', `/api/projects/${pid}/updates`, body);
+  if (r.error) return toast(r.error, 'err');
+  
+  toast('Posted');
+  closeDetailModal();
+  renderUpdates(pid);
+};
+window.deleteUpdate = async function(pid,uid){ 
+  if(!confirm('Delete this update?')) return;
+  await api('DELETE',`/api/projects/${pid}/updates/${uid}`); 
+  toast('Deleted'); 
+  closeDetailModal(); 
+  renderUpdates(pid); 
+};
+
+window.openUpdateDetail = async function(pid, uid) {
+  const [updates, tasks] = await Promise.all([
+    api('GET',`/api/projects/${pid}/updates`),
+    window._project_tasks ? Promise.resolve(window._project_tasks) : api('GET',`/api/projects/${pid}/tasks`)
+  ]);
+  const u = updates.find(x=>x.id===uid);
+  if (!u) return;
+  const t = tasks.find(x=>x.id===u.task_id);
+
+  document.getElementById('detail-modal-root').innerHTML = `
     <div class="detail-overlay" onclick="if(event.target===this)closeDetailModal()">
       <div class="detail-modal">
         <div class="dm-header">
@@ -931,8 +1318,13 @@ window.openUpdateDetail = function(pid, uid) {
         <div class="dm-body">
           <div class="dm-section">
             <div class="dm-section-label">Content</div>
-            <div class="dm-desc" style="font-size:15px;line-height:1.9">${md(u.content)}</div>
+            <div class="dm-desc" style="font-size:15px;line-height:1.7">${md(u.content)}</div>
           </div>
+          ${t ? `<div class="dm-section-label">Linked Task</div>
+                 <div style="font-size:14px;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:6px">
+                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--blue)"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg> ${esc(t.title)}
+                 </div>
+                 ${(t.tags && t.tags.length) ? `<div style="display:flex;gap:4px;margin-bottom:16px">${t.tags.map(tag => `<span class="md-tag">#${tag}</span>`).join('')}</div>` : '<div style="margin-bottom:16px"></div>'}` : ''}
           ${renderFilesMeta(u.files_meta, pid, u.task_id || -1)}
         </div>
         <div class="dm-footer">
@@ -941,7 +1333,6 @@ window.openUpdateDetail = function(pid, uid) {
         </div>
       </div>
     </div>`;
-  });
 };
 
 // ── IDEAS ─────────────────────────────────────────────────────
@@ -953,26 +1344,24 @@ async function renderIdeas(pid) {
 }
 async function renderAllIdeas() {
   const ideas = await api('GET','/api/ideas');
-  setBreadcrumb([{label:'All Ideas'}]); setSidebarActive('#/ideas');
+  setBreadcrumb([{label:'All Ideas'}]);
   renderIdeasView(null, ideas, false);
 }
 function renderIdeasView(pid, ideas, showTabs) {
-  const tabsHtml = showTabs && pid ? projectNavTabs(pid,'Ideas') : '';
-  const hdr = pid ? '' : `<div class="page-hd"><h1>All Ideas</h1></div>`;
+  const hdr = `<div class="page-hd">
+    <div>
+      <h1>${pid?'Ideas':'All Ideas'}</h1>
+      <div class="sub">Store and vote on potential workspace features and future plans</div>
+    </div>
+    <button class="btn btn-acc btn-sm" style="margin-left:auto" onclick="openNewIdeaModal(${pid||'null'})">+ New Idea</button>
+  </div>`;
   view(`
     ${hdr}
-    ${tabsHtml}
     <div class="prose-wrap">
-      <div class="form-card" style="margin-bottom:20px">
-        <h3>New Idea</h3>
-        <div class="form-row"><input id="if-title" type="text" placeholder="Idea title"></div>
-        <div class="form-row"><textarea id="if-desc" placeholder="Description…"></textarea></div>
-        <button class="btn btn-acc btn-sm" onclick="createIdea(${pid||'null'})">Submit</button>
-      </div>
       ${ideas.length ? `<div class="idea-post-list">${ideas.map(i=>`
         <div class="idea-post" style="cursor:pointer" onclick="openIdeaDetail(${i.id},${pid||'null'})">
           <div class="idea-post-header">
-            <div class="idea-post-title">💡 ${esc(i.title)}</div>
+            <div class="idea-post-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;color:var(--amber)"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg> ${esc(i.title)}</div>
             <span class="badge s-${i.status}">${i.status}</span>
           </div>
           ${i.description?`<div class="idea-post-desc">${esc(i.description)}</div>`:''}
@@ -980,10 +1369,39 @@ function renderIdeasView(pid, ideas, showTabs) {
             <button class="vote-btn" onclick="event.stopPropagation();voteIdea(${i.id})">▲ ${i.votes} votes</button>
             ${i.tags&&i.tags.length?i.tags.map(t=>`<span class="chip" style="background:var(--surf2);color:var(--mid)">${esc(t)}</span>`).join(''):''}
           </div>
-        </div>`).join('')}</div>` : '<div class="empty"><div class="icon">💡</div><p>No ideas yet</p></div>'}
+        </div>`).join('')}</div>` : '<div class="empty"><div class="icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.3;color:var(--amber)"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></div><p>No ideas yet</p></div>'}
     </div>
   `);
 }
+window.openNewIdeaModal = function(pid) {
+  document.getElementById('detail-modal-root').innerHTML = `
+    <div class="detail-overlay" onclick="if(event.target===this)closeDetailModal()">
+      <div class="detail-modal">
+        <div class="dm-header">
+          <div class="dm-header-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--amber)"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></div>
+          <div class="dm-header-body">
+            <h2>New Idea</h2>
+            <div class="dm-meta">Share your thoughts for the project</div>
+          </div>
+          <button class="dm-close" onclick="closeDetailModal()">✕</button>
+        </div>
+        <div class="dm-body">
+          <div class="dm-section">
+            <label class="dm-section-label">Title</label>
+            <input type="text" id="if-title" placeholder="Idea title">
+          </div>
+          <div class="dm-section">
+            <label class="dm-section-label">Description</label>
+            <textarea id="if-desc" placeholder="Describe your idea..." style="min-height:120px"></textarea>
+          </div>
+        </div>
+        <div class="dm-footer">
+          <button class="btn btn-out btn-sm" onclick="closeDetailModal()">Cancel</button>
+          <button class="btn btn-acc btn-sm" onclick="createIdea(${pid})">Submit Idea</button>
+        </div>
+      </div>
+    </div>`;
+};
 window.createIdea = async function(pid){
   const title=document.getElementById('if-title').value.trim(); if(!title) return toast('Title required','err');
   const body={title,description:document.getElementById('if-desc').value.trim()};
@@ -991,6 +1409,7 @@ window.createIdea = async function(pid){
   const r=await api('POST','/api/ideas',body); if(r.error) return toast(r.error,'err');
   toast('Idea submitted');
   if(pid) renderIdeas(pid); else renderAllIdeas();
+  closeDetailModal();
 };
 window.voteIdea = async function(iid){ await api('POST',`/api/ideas/${iid}/vote`,{}); toast('Voted! ▲'); const h=location.hash; route(); };
 window.deleteIdea = async function(iid,pid){ await api('DELETE',`/api/ideas/${iid}`); toast('Deleted'); closeDetailModal(); if(pid) renderIdeas(pid); else renderAllIdeas(); };
@@ -1037,10 +1456,13 @@ async function renderBoards(pid) {
   setActiveProject({id:pid,name:proj.name});
   setBreadcrumb([{label:'Overview',href:'#/'},{label:proj.name,href:`#/projects/${pid}`},{label:'Boards'}]);
   view(`
-    <div class="page-hd"><h1>Boards</h1>
+    <div class="page-hd">
+      <div>
+        <h1>Boards</h1>
+        <div class="sub">Visual process flows and diagrams for system architecture</div>
+      </div>
       <button class="btn btn-acc btn-sm" style="margin-left:auto" onclick="document.getElementById('bf-form').style.display=''">+ New Board</button>
     </div>
-    ${projectNavTabs(pid,'Boards')}
     <div id="bf-form" class="form-card" style="display:none">
       <h3>New Board</h3>
       <div class="form-row">
@@ -1341,7 +1763,8 @@ function initRealtimeEvents() {
         }
       } else if (type === 'task_created' || type === 'task_deleted') {
         if (window._pid === data.project_id) {
-          renderTasks(window._pid);
+          if (location.hash.includes('/tasks')) renderTasks(window._pid);
+          else loadSidebar(); // just update sidebar counts
         }
       } else if (type === 'changelog_created') {
         if (window._pid === data.project_id || !window._pid) {

@@ -460,15 +460,15 @@ function nodeHTML(n,def,isNote,isTab) {
     </div>
     <div class="note-body">${esc(n.meta?.description||'Click to add note…')}</div>`;
   return `
-    <div class="node-row">
-      <div class="node-icon-cell" style="background:${def.b};color:${def.c}">${def.i}</div>
+    <div class="node-row" style="background:${def.b}; border-bottom:1px solid rgba(255,255,255,.05)">
+      <div class="node-icon-cell" style="color:${def.c}">${def.i}</div>
       <div class="node-text-cell">
         <div class="node-title">${esc(n.label)}</div>
         <div class="node-subtitle">${subtitles[n.node_type]||n.node_type}</div>
       </div>
       ${n.node_type==='external_table'&&n.meta?.ref_diagram_id?`
       <div style="display:flex;align-items:center;padding-right:10px" title="Jump to Board" onclick="ev=arguments[0];ev.stopPropagation();openWf(${n.meta.ref_diagram_id})">
-        <div style="width:24px;height:24px;border-radius:4px;background:var(--rose-dim);color:var(--rose);display:flex;align-items:center;justify-content:center;cursor:pointer">➔</div>
+        <div style="width:24px;height:24px;border-radius:4px;background:rgba(255,255,255,.1);color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer">➔</div>
       </div>`:''}
     </div>
     ${isTab&&cols.length?`<div class="node-cols">${cols.map((c,i)=>`

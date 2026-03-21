@@ -364,6 +364,17 @@ def list_tasks(project_id: int, status: str = "", assignee: str = "", milestone_
 
 
 @mcp.tool()
+def get_task(project_id: int, task_id: int) -> str:
+    """Get details of a specific task.
+
+    Args:
+        project_id: The project ID.
+        task_id: The task ID.
+    """
+    return json.dumps(_api("GET", f"/api/projects/{project_id}/tasks/{task_id}"), indent=2)
+
+
+@mcp.tool()
 def create_task(
     project_id: int,
     title: str,
@@ -391,13 +402,23 @@ def create_task(
         due_date: Due date YYYY-MM-DD (empty = none).
         estimated_hours: Estimated hours (-1 = none).
         tags: JSON array string of tags.
+        files_meta: JSON array string of files metadata.
         is_ai_working: 1 for active, 0 for inactive, -1 to skip.
     """
+    body_meta = {}
+    
+    # Automatic snapshot if starting work
+    if is_ai_working == 1 or (status == "in_progress" and is_ai_working == -1):
+        snapshot = _git_changed_files(str(PROJECT_DIR))
+        if snapshot:
+            body_meta["capture_snapshot"] = snapshot
+
     body: dict = {
         "title": title, "description": description,
         "assignee": assignee, "status": status, "priority": priority,
         "tags": json.loads(tags),
         "files_meta": json.loads(files_meta),
+        "meta": body_meta,
     }
     if is_ai_working != -1:
         body["is_ai_working"] = bool(is_ai_working)
@@ -425,6 +446,7 @@ def update_task(
     estimated_hours: float = -1,
     actual_hours: float = -1,
     files_meta: str = "",
+    meta: str = "",
     is_ai_working: int = -1,
 ) -> str:
     """Update a task. Changes are auto-logged to the changelog.
@@ -440,6 +462,8 @@ def update_task(
         due_date: New due date YYYY-MM-DD (empty = keep).
         estimated_hours: New estimate (-1 = keep).
         actual_hours: New actual hours (-1 = keep).
+        files_meta: JSON array string of files metadata.
+        meta: JSON string of general metadata.
         is_ai_working: 1 for active, 0 for inactive, -1 to keep current.
     """
     body: dict = {}
@@ -447,6 +471,8 @@ def update_task(
         body["title"] = title
     if description:
         body["description"] = description
+    if meta:
+        body["meta"] = json.loads(meta)
     if assignee:
         body["assignee"] = assignee
     if status:
@@ -469,6 +495,28 @@ def update_task(
     elif status in ["bugs", "todo", "done", "review"] and status:
         # If moving out of progress, default to stopping the AI flag
         body["is_ai_working"] = False
+
+    # Snapshot logic for existing tasks
+    if body.get("is_ai_working") is True:
+        # Fetch current task to see if it already has a snapshot
+        try:
+            current = _api("GET", f"/api/projects/{project_id}/tasks/{task_id}")
+            if not current.get("is_ai_working"):
+                # Transitioning to working! Take snapshot.
+                snapshot = _git_changed_files(str(PROJECT_DIR))
+                if snapshot:
+                    existing_meta = current.get("meta", {})
+                    if not isinstance(existing_meta, dict): existing_meta = {}
+                    
+                    # Merge with provided meta if any
+                    new_meta = body.get("meta", existing_meta)
+                    if not isinstance(new_meta, dict): new_meta = {}
+                    
+                    new_meta["capture_snapshot"] = snapshot
+                    body["meta"] = new_meta
+        except:
+            pass
+
     return json.dumps(_api("PATCH", f"/api/projects/{project_id}/tasks/{task_id}", body), indent=2)
 
 
@@ -495,7 +543,25 @@ def set_ai_working_status(project_id: int, task_id: int, is_working: bool) -> st
         task_id: The task ID.
         is_working: True to show AI is active, False to stop.
     """
-    body = {"is_ai_working": is_working}
+    body: dict = {"is_ai_working": is_working}
+    
+    if is_working:
+        # Take snapshot
+        try:
+            current = _api("GET", f"/api/projects/{project_id}/tasks/{task_id}")
+            if not current.get("is_ai_working"):
+                snapshot = _git_changed_files(str(PROJECT_DIR))
+                if snapshot:
+                    meta = current.get("meta", {})
+                    if not isinstance(meta, dict): meta = {}
+                    meta["capture_snapshot"] = snapshot
+                    body["meta"] = meta
+                    # Note: The ai-status endpoint might not support meta, 
+                    # so we actually should use PATCH instead.
+                    return json.dumps(_api("PATCH", f"/api/projects/{project_id}/tasks/{task_id}", body), indent=2)
+        except:
+            pass
+
     return json.dumps(_api("POST", f"/api/projects/{project_id}/tasks/{task_id}/ai-status", body), indent=2)
 
 
@@ -1172,6 +1238,10 @@ def _git_changed_files(workspace_path: str, since_ref: str = "") -> list[dict]:
     cwd = workspace_path or "."
     results: list[dict] = []
 
+    # Fail-safe: Check if .git directory exists
+    if not os.path.isdir(os.path.join(cwd, ".git")):
+        return []
+
     # Map git status codes to human actions
     status_map = {
         "A": "added", "M": "modified", "D": "deleted",
@@ -1179,6 +1249,9 @@ def _git_changed_files(workspace_path: str, since_ref: str = "") -> list[dict]:
     }
 
     try:
+        # Check if git command is available
+        _sp.run(["git", "--version"], capture_output=True, timeout=5)
+
         if since_ref:
             # Diff against a specific ref (commit, branch, tag)
             cmd = ["git", "diff", "--name-status", since_ref, "HEAD"]
@@ -1205,10 +1278,52 @@ def _git_changed_files(workspace_path: str, since_ref: str = "") -> list[dict]:
                 if line:
                     results.append({"action": "added", "path": line})
 
-    except Exception as exc:
-        results.append({"action": "error", "path": str(exc)})
+    except Exception:
+        # Silent fail for git-related issues to keep tool stable
+        pass
 
     return results
+
+
+
+@mcp.tool()
+def archive_all_done_tasks(project_id: int) -> str:
+    """Archive all tasks with status 'done' in a project.
+    
+    This is an efficient bulk operation to clean up the Kanban board.
+    
+    Args:
+        project_id: The project ID.
+    """
+    return json.dumps(_api("POST", f"/api/projects/{project_id}/tasks/archive-done"), indent=2)
+
+
+@mcp.tool()
+def archive_task(project_id: int, task_id: int) -> str:
+    """Archive a single task and preserve its original status in metadata.
+
+    Args:
+        project_id: The project ID.
+        task_id: The task ID.
+    """
+    _ensure_server()
+    # Fetch task to get current status and existing meta
+    t_res = _api("GET", f"/api/projects/{project_id}/tasks/{task_id}")
+    if "error" in t_res:
+        return json.dumps(t_res, indent=2)
+
+    org_status = t_res.get("status", "todo")
+    meta = t_res.get("meta", {})
+    if not isinstance(meta, dict):
+        meta = {}
+
+    meta["original_status"] = org_status
+
+    res = _api("PATCH", f"/api/projects/{project_id}/tasks/{task_id}", {
+        "status": "archived",
+        "meta": meta
+    })
+    return json.dumps(res, indent=2)
 
 
 @mcp.tool()
@@ -1219,6 +1334,7 @@ def capture_file_changes(
     since_ref: str = "",
     auto_update_task: bool = True,
     is_ai_working: int = -1,
+    ignore_snapshot: bool = False,
 ) -> str:
     """Automatically capture file changes from a Git workspace and log them to a Plano task.
 
@@ -1235,13 +1351,34 @@ def capture_file_changes(
         since_ref: Git ref to diff against (commit SHA, branch, tag). Empty = uncommitted changes vs HEAD.
         auto_update_task: If True (default), automatically patches the task's files_meta with captured changes.
         is_ai_working: 1 for active, 0 for inactive, -1 to keep current.
+        ignore_snapshot: If True, uses the raw git diff without filtering by task starting state.
     """
     path = workspace_path or str(PROJECT_DIR)
     changes = _git_changed_files(path, since_ref)
 
+    # Filtering logic: If no since_ref and not ignore_snapshot, try to use task snapshot
+    if not since_ref and not ignore_snapshot:
+        try:
+            t_res = _api("GET", f"/api/projects/{project_id}/tasks/{task_id}")
+            task_meta = t_res.get("meta", {})
+            # Handle meta coming back as a JSON string or dict
+            if isinstance(task_meta, str):
+                try:
+                    task_meta = json.loads(task_meta)
+                except:
+                    task_meta = {}
+            
+            if isinstance(task_meta, dict) and "capture_snapshot" in task_meta:
+                snapshot = task_meta["capture_snapshot"]
+                snapshot_paths = {s["path"] for s in snapshot}
+                # Only keep files that WEREN'T in the snapshot
+                changes = [c for c in changes if c["path"] not in snapshot_paths]
+        except:
+            pass
+
     result: dict = {
         "workspace": path,
-        "since_ref": since_ref or "HEAD (uncommitted)",
+        "since_ref": since_ref or "HEAD (filtered by task snapshot)",
         "files_changed": len(changes),
         "changes": changes,
     }

@@ -11,6 +11,11 @@ Use this directive when the following keywords or intent are identified:
 - Queries about milestones, recent changes, or project summaries.
 - "Execute task", "Do task", "Perform next task", "Work on tasks".
 
+## Tooling Constraints
+- **Exclusivity**: When performing any project management task (listing/updating tasks, milestones, etc.), you **MUST ONLY** use tools provided by the `plano` MCP server.
+- **No External Interference**: Do NOT call tools from other MCP servers (e.g., GitHub, Google Search) to interact with Plano data unless specifically asked for an external integration.
+- **Self-Correction**: If a non-Plano tool is accidentally invoked for a Plano task, you must acknowledge the error and immediately switch to the correct `plano` MCP tool.
+
 ## Procedure
 1.  **Identify Project**: If multiple projects exist, list them using `mcp_plano_list_projects` and identify the one related to the current workspace (ID 2 for "Plano PM").
 2.  **Fetch Data**:
@@ -22,15 +27,19 @@ Use this directive when the following keywords or intent are identified:
     *   Show recent activity or blockers from updates.
 
 ## Task Execution
-When tasked with performing a task from Plano:
-1.  **Selection**: Identify the task to work on. If the user doesn't specify, list available tasks using `mcp_plano_list_tasks(project_id=2, status="todo")`. (Note: tasks in `bugs` should be prioritized if urgent).
-2.  **Immediate Status Update**: **As soon as a task is selected, you MUST call `mcp_plano_update_task`** to set its status to `in_progress` and `is_ai_working=1`. This is mandatory and must happen BEFORE starting any coding or file modifications, ensuring the user sees the real-time "AI Working" highlight.
-3.  **Confirmation**: Briefly confirm with the user which task is being started and that the status has been updated in Plano. **If the user explicitly uses the command "select" or asks to "select a task", your response must be exactly "task selected" and nothing else.**
-4.  **Review Phase**: Upon finishing the code/work, mark the task as `review` (should go to review before being marked as `done`) AND reset `is_ai_working=0`.
-5.  **Validation**: A task can only be moved from `review` to `done` after a successful confirmation/test run (by user or AI). If issues are found, move it back to `in_progress`.
-6.  **Progress Update**: After completing the work and before handing off (e.g., when moving a task to `review` or `done`), **ALWAYS create a post update** via `mcp_plano_post_update`. Summarize what was accomplished and link it to the task ID if applicable.
-7.  **Next Step Hand-off**: After each completed effort (moving to `review`), **STOP and ask the user** if they want to continue with the next task or if they have other instructions. **Do NOT proceed to the next task without explicit user approval.**
+When tasked with performing a task from Plano or when a new milestone is created:
+1.  **Mandatory Initial Task**: **When a milestone is created, you MUST immediately create at least one associated task using `mcp_plano_create_task` under that milestone.** This ensures no milestone is left without actionable items.
+2.  **Mandatory In-Progress**: You MUST select a task to work on. Immediately after selection (or creation), you MUST call `mcp_plano_update_task` to set its status to `in_progress` and `is_ai_working=1`. **This is a HARD REQUIREMENT and MUST happen BEFORE any coding or file modifications.** If no task is specified, use `mcp_plano_list_tasks(project_id=2, status="todo")` first.
+3.  **Confirmation**: Briefly confirm the task being started. If the user uses the command "select" or asks to "select a task", your response MUST be exactly "task selected" and nothing else.
+4.  **Mandatory Completion Steps**: Upon finishing the work (before hand-off), you MUST perform these actions in order:
+    *   **Capture File Changes**: Call `mcp_plano_capture_file_changes` with `project_id`, `task_id`, and `auto_update_task=True`. This is CRITICAL for documenting exactly which files were affected.
+    *   **Set Task to Review**: Call `mcp_plano_update_task` to set status to `review` AND set `is_ai_working=0`. **Removing the AI working status is mandatory.**
+    *   **Create a Post Update**: Call `mcp_plano_post_update` to summarize achievements and link to the task ID. **This step is MANDATORY and cannot be bypassed under any circumstances.**
+5.  **Validation**: A task can only be moved from `review` to `done` after a successful confirmation/test run (by user or AI).
+6.  **Stop & Ask**: After completing these steps (moving to `review`), **STOP and ask the user** if they want to continue or if they have other instructions. **Do NOT proceed to the next task without explicit user approval.**
+
 
 ## Edge Cases
 - **Server Connectivity**: If the Plano MCP server is unresponsive, default to reading local documentation like `README.md` or git history to determine progress.
 - **Ambiguity**: If the user asks for "progress" without context, default to checking the most recently updated project in the Plano system.
+- **Tool Selection**: Always prioritize `mcp_plano_*` tools over any other available MCP server tools for project data.

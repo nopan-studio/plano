@@ -25,7 +25,7 @@ EDGE_TYPES = {
 }
 
 PROJECT_STATUSES = ['planning', 'active', 'on_hold', 'completed', 'archived']
-TASK_STATUSES = ['todo', 'in_progress', 'review', 'done', 'bugs']
+TASK_STATUSES = ['todo', 'in_progress', 'review', 'done', 'bugs', 'archived']
 MILESTONE_STATUSES = ['pending', 'in_progress', 'completed', 'missed']
 IDEA_STATUSES = ['new', 'exploring', 'accepted', 'rejected']
 UPDATE_TYPES = ['progress', 'blocker', 'decision', 'note']
@@ -116,6 +116,7 @@ class Task(db.Model):
     actual_hours = db.Column(db.Float, nullable=True)
     tags = db.Column(db.Text, default='[]')  # JSON array
     files_meta = db.Column(db.Text, default='[]')  # JSON array of file info
+    meta = db.Column(db.Text, default='{}')  # General metadata JSON
     is_ai_working = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -132,6 +133,7 @@ class Task(db.Model):
             actual_hours=self.actual_hours,
             tags=json.loads(self.tags or '[]'),
             files_meta=json.loads(self.files_meta or '[]'),
+            meta=json.loads(self.meta or '{}'),
             is_ai_working=self.is_ai_working,
             created_at=self.created_at.isoformat() + 'Z',
             updated_at=self.updated_at.isoformat() + 'Z',

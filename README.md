@@ -126,5 +126,5 @@ Plano is built using a lightweight stack:
 
 ## License
 Copyright (C) 2026 nopan-studio
-GNU General Public License v3.0 (GPL-3.0)
+MIT License
 See [LICENSE](LICENSE) for details.

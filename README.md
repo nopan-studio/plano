@@ -18,14 +18,11 @@ It features built-in visual diagrams alongside standard task tracking so your ar
 
 ## Screenshots
 
-![Screenshot 1](https://github.com/nopan-studio/plano/raw/main/static/1.jpg.jpeg)
-![Screenshot 2](https://github.com/nopan-studio/plano/raw/main/static/2.jpg.jpeg)
-![Screenshot 3](https://github.com/nopan-studio/plano/raw/main/static/3.jpg.jpeg)
-![Screenshot 4](https://github.com/nopan-studio/plano/raw/main/static/4.jpg.jpeg)
-![Screenshot 5](https://github.com/nopan-studio/plano/raw/main/static/5.jpg.jpeg)
-![Screenshot 6](https://github.com/nopan-studio/plano/raw/main/static/6.jpg.jpeg)
-![Screenshot 7](https://github.com/nopan-studio/plano/raw/main/static/7.jpg.jpeg)
-![Screenshot 8](https://github.com/nopan-studio/plano/raw/main/static/8.png)
+![Screenshot 1](https://github.com/nopan-studio/plano/raw/main/static/1.png)
+![Screenshot 2](https://github.com/nopan-studio/plano/raw/main/static/2.png)
+![Screenshot 3](https://github.com/nopan-studio/plano/raw/main/static/3.png)
+![Screenshot 4](https://github.com/nopan-studio/plano/raw/main/static/4.png)
+
 
 ## Quick Start
 

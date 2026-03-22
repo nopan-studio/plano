@@ -12,7 +12,8 @@ export const nodes = [
 	() => import('./nodes/8'),
 	() => import('./nodes/9'),
 	() => import('./nodes/10'),
-	() => import('./nodes/11')
+	() => import('./nodes/11'),
+	() => import('./nodes/12')
 ];
 
 export const server_loads = [];
@@ -23,11 +24,12 @@ export const dictionary = {
 		"/projects/[id]": [4],
 		"/projects/[id]/archive": [5],
 		"/projects/[id]/boards": [6],
-		"/projects/[id]/ideas": [7],
-		"/projects/[id]/milestones": [8],
-		"/projects/[id]/project-logs": [9],
-		"/projects/[id]/tasks": [10],
-		"/projects/[id]/updates": [11]
+		"/projects/[id]/editor/[did]": [7],
+		"/projects/[id]/ideas": [8],
+		"/projects/[id]/milestones": [9],
+		"/projects/[id]/project-logs": [10],
+		"/projects/[id]/tasks": [11],
+		"/projects/[id]/updates": [12]
 	};
 
 export const hooks = {

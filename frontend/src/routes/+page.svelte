@@ -66,7 +66,7 @@
       {@const total = p.task_count || 0}
       {@const pct = total ? Math.round((done/total)*100) : 0}
       
-      <div class="card" style="display:flex; flex-direction:column; min-height:200px; padding:24px;">
+      <a href="/projects/{p.id}" class="card" style="display:flex; flex-direction:column; min-height:200px; padding:24px; text-decoration:none; color:inherit; height:100%">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
           <div class="card-title" style="font-size:16px; margin-bottom:0">{p.name}</div>
           <span class="badge s-{p.status}">{p.status}</span>
@@ -94,13 +94,13 @@
 
           <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--text-dim); margin-bottom:6px; font-family:var(--mono);">
             <span>PROG: {p.progress_pct||0}%</span>
-            <span>DONE PROJECTS: {pct}%</span>
+            <span>TASK VELO: {pct}%</span>
           </div>
           <div class="prog" style="height:6px; border-radius:3px; background:var(--surface2)">
             <div class="prog-bar" style="width:{p.progress_pct||0}%; background:var(--accent); box-shadow:0 0 8px var(--accent-glow)"></div>
           </div>
         </div>
-      </div>
+      </a>
     {/each}
   {:else}
     <div class="empty" style="grid-column: 1/-1;">

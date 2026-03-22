@@ -4,6 +4,9 @@
 	"/projects/[id]": [],
 	"/projects/[id]/archive": [],
 	"/projects/[id]/boards": [],
+	"/projects/[id]/editor/[did]": [
+		"src/routes/projects/[id]/editor/[did]/+page.js"
+	],
 	"/projects/[id]/ideas": [],
 	"/projects/[id]/milestones": [],
 	"/projects/[id]/project-logs": [],

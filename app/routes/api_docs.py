@@ -101,21 +101,20 @@ def api_docs():
 # ─── UI Routes ────────────────────────────────────────────────────────────────
 
 @api_docs_bp.route('/')
-@api_docs_bp.route('/project/<int:pid>')
-def root(pid=None):
-    """Serve the dashboard SPA at the root /."""
+@api_docs_bp.route('/projects/<int:pid>')
+@api_docs_bp.route('/projects/<int:pid>/<path:path>')
+@api_docs_bp.route('/ideas')
+@api_docs_bp.route('/project/<int:pid>') # Legacy compatibility
+def root(pid=None, path=None):
+    """Serve the dashboard SPA for all frontend routes."""
+    # If the path contains 'editor', we might want to serve index.html (the old editor)
+    # But since we ported it to Svelte, we should serve the Svelte entry point.
+    # Assuming dashboard.html is the Svelte entry point now.
     return render_template('dashboard.html')
-
-@api_docs_bp.route('/dashboard')
-@api_docs_bp.route('/dashboard/<int:pid>')
-def dashboard_redirect(pid=None):
-    """Redirect legacy dashboard routes to root."""
-    return redirect('/')
-
 
 @api_docs_bp.route('/project/<int:pid>/editor')
 @api_docs_bp.route('/project/<int:pid>/editor/<int:did>')
-def index(pid, did=None):
+def legacy_editor(pid, did=None):
     return render_template('index.html')
 
 

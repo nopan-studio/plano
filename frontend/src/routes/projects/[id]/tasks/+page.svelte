@@ -351,8 +351,10 @@
   .kanban {
     display: flex;
     gap: 24px;
+    margin-inline: -24px;
+    padding-inline: 24px;
     padding-bottom: 60px;
-    width: 100%;
+    width: calc(100% + 48px);
     align-items: flex-start;
     user-select: none;
   }

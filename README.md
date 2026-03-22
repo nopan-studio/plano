@@ -24,15 +24,20 @@ It features built-in visual diagrams alongside standard task tracking so your ar
 ![Screenshot 4](https://github.com/nopan-studio/plano/raw/main/static/4.png)
 
 
-## Quick Start
+## Getting Started
 
-### 1. Setup Environment
+Plano is built for AI-first development. Follow these steps to set up both the environment and the AI agent directives.
+
+### 1. Project Installation
+
+Clone the repository and set up the Python environment:
 
 **Linux / macOS:**
 ```bash
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
+./start.sh
 ```
 
 **Windows:**
@@ -40,32 +45,22 @@ pip install -r requirements.txt
 python -m venv venv
 .\venv\Scripts\activate
 pip install -r requirements.txt
-```
-
-### 2. Start the Server
-
-**Linux / macOS:**
-```bash
-./start.sh
-```
-
-**Windows:**
-```powershell
 python run.py
 ```
 
-### 3. Usage
-- **Dashboard**: `http://localhost:5000/dashboard`
-- **Health Check**: `http://localhost:5000/health`
+### 2. AI Agent Adaptation (Mandatory)
+
+To enable Plano's full project management layer for your AI assistant (Cursor, Windsurf, or Antigravity), you **must** adapt the pre-configured directives. This ensures the AI follows the correct SOPs (Standard Operating Procedures).
+
+1.  **Read the Instructions**: Open [AGENTS.md](AGENTS.md) and review the 3-Layer Architecture.
+2.  **Configure Rules**: Copy the contents of [AGENTS.md](AGENTS.md) AND the contents of the `directives/` folder into your agent's core rules (e.g., `.cursorrules`, `.windsurfrules`, or project settings).
+3.  **Verify Setup**: Ask the AI: *"What is the Plano project oversight directive?"*. If it explains the tool-calling rules, the setup is successful.
+
+### 3. Quick Links
+- **Dashboard**: `http://localhost:5000/`
 - **API Docs**: `http://localhost:5000/api`
+- **Health Check**: `http://localhost:5000/health`
 
-### 4. Recommended: Install AI Agent Directives
-For the best experience, we **highly recommend** installing the pre-configured **Directives** system. This gives AI agents (like Cursor, Windsurf, or Antigravity) structured oversight of your project.
-
-To install:
-1. Copy the contents of [AGENTS.md](AGENTS.md).
-2. Paste them into your agent's custom instructions file (e.g., `.cursorrules`, `.windsurfrules`, or project settings).
-3. The agent will now automatically use Plano to track its own progress seamlessly.
 
 ## MCP Installation
 
@@ -105,6 +100,13 @@ Add the following to your `claude_desktop_config.json` (replacing `/PATH/TO/PLAN
 *Note: The MCP server automatically manages the lifecycle of the Flask backend. On the first tool call, it will start the backend on port 5050 if it isn't already running.*
 
 ## Recent Changes (Changelog)
+
+- **v2.3.0** (2026-03-22):
+  - **AI Adaptation**: Revamped the installation guide to prioritize AI Agent directives and `AGENTS.md` for mandatory project oversight.
+  - **Dashboard Refactor**: Migrated the main dashboard route to `/` and significantly improved card designs and layout.
+  - **Idea Board Integration**: Integrated the "Ideas" system directly into project-specific views for better unified management.
+  - **Bug Fix Automation**: Introduced automatic progress logging for bug fixes when tasks are resolved.
+  - **UI/UX Polish**: Fixed markdown spacing issues in descriptions and added a "Contribute" link to the bottom sidebar.
 
 - **v2.2.0** (2026-03-21):
   - **Lean Core**: Removed GitHub integration in favor of a simpler, more robust local-first architecture using a standalone `git diff` capture tool.

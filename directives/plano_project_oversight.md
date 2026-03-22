@@ -27,6 +27,9 @@ Use this directive when the following keywords or intent are identified:
     *   Show recent activity or blockers from updates.
 
 ## Task Execution
+> [!CAUTION]
+> **NO BYPASSING POLICY**: You MUST NOT bypass the project management documentation steps. Every task completion MUST be backed by a file change capture, a status update, and a detailed post update. 
+
 When tasked with performing a task from Plano or when a new milestone is created:
 1.  **Mandatory Initial Task**: **When a milestone is created, you MUST immediately create at least one associated task using `mcp_plano_create_task` under that milestone.** This ensures no milestone is left without actionable items.
 2.  **Mandatory In-Progress**: You MUST select a task to work on. Immediately after selection (or creation), you MUST call `mcp_plano_update_task` to set its status to `in_progress` and `is_ai_working=1`. **This is a HARD REQUIREMENT and MUST happen BEFORE any coding or file modifications.** If no task is specified, use `mcp_plano_list_tasks(project_id=2, status="todo")` first.
@@ -34,7 +37,7 @@ When tasked with performing a task from Plano or when a new milestone is created
 4.  **Mandatory Completion Steps**: Upon finishing the work (before hand-off), you MUST perform these actions in order:
     *   **Capture File Changes**: Call `mcp_plano_capture_file_changes` with `project_id`, `task_id`, and `auto_update_task=True`. This is CRITICAL for documenting exactly which files were affected.
     *   **Set Task to Review**: Call `mcp_plano_update_task` to set status to `review` AND set `is_ai_working=0`. **Removing the AI working status is mandatory.** You MUST always use `review` status upon completion unless the user has explicitly instructed you to mark it as `done`.
-    *   **Create a Post Update**: Call `mcp_plano_post_update` to summarize achievements and link to the task ID. **This step is MANDATORY and cannot be bypassed under any circumstances.**
+    *   **Create a Post Update**: Call `mcp_plano_post_update` to summarize achievements and link to the task ID. Follow the detailed format specified in [plano_post_update_standard.md](directives/plano_post_update_standard.md). **This step is MANDATORY and cannot be bypassed under any circumstances.**
 5.  **Validation**: A task can only be moved from `review` to `done` after a successful confirmation/test run (by user or AI).
 6.  **Stop & Ask**: After completing these steps (moving to `review`), **STOP and ask the user** if they want to continue or if they have other instructions. **Do NOT proceed to the next task without explicit user approval.**
 

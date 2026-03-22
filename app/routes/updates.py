@@ -3,6 +3,7 @@ from flask import Blueprint, jsonify, request
 import json
 from app import db
 from app.models import Update, Project, UPDATE_TYPES
+from app.events import event_bus
 
 updates_bp = Blueprint('updates', __name__)
 
@@ -45,6 +46,10 @@ def create_update(pid):
     )
     db.session.add(u)
     db.session.commit()
+    
+    # Broadcast creation for real-time updates
+    event_bus.broadcast('update_created', u.to_dict())
+    
     return ok(u.to_dict(), 201)
 
 
@@ -61,4 +66,8 @@ def delete_update(pid, uid):
     u = Update.query.filter_by(id=uid, project_id=pid).first_or_404()
     db.session.delete(u)
     db.session.commit()
+    
+    # Broadcast deletion for real-time updates
+    event_bus.broadcast('update_deleted', {'id': uid, 'project_id': pid})
+    
     return ok({'deleted': True, 'id': uid})

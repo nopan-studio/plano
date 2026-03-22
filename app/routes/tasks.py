@@ -3,7 +3,7 @@ from flask import Blueprint, jsonify, request
 from datetime import datetime
 import json
 from app import db
-from app.models import Task, Project, TASK_STATUSES, PRIORITIES
+from app.models import Task, Project, Update, TASK_STATUSES, PRIORITIES
 from app.changelog import log_change, log_field_changes
 from app.events import event_bus
 
@@ -135,6 +135,27 @@ def update_task(pid, tid):
     new = t.to_dict()
     log_field_changes(pid, 'task', t.id, old, new)
     db.session.commit()
+    
+    # Automatic Update creation for bugs
+    if 'status' in body and body['status'] != old['status']:
+        new_status = body['status']
+        content = ""
+        if old['status'] == 'bugs':
+            if new_status == 'in_progress':
+                content = f"Started tackling bug: **{t.title}**"
+            elif new_status == 'done':
+                content = f"Fixed bug: **{t.title}**"
+        
+        if content:
+            u = Update(
+                project_id=pid,
+                task_id=tid,
+                content=content,
+                update_type='bug_fix'
+            )
+            db.session.add(u)
+            db.session.commit()
+            event_bus.broadcast('update_created', u.to_dict())
     
     # Broadcast update
     event_bus.broadcast('task_updated', t.to_dict())

@@ -28,7 +28,7 @@ PROJECT_STATUSES = ['planning', 'active', 'on_hold', 'completed', 'archived']
 TASK_STATUSES = ['todo', 'in_progress', 'review', 'done', 'bugs', 'archived']
 MILESTONE_STATUSES = ['pending', 'in_progress', 'completed', 'missed']
 IDEA_STATUSES = ['new', 'exploring', 'accepted', 'rejected']
-UPDATE_TYPES = ['progress', 'blocker', 'decision', 'note']
+UPDATE_TYPES = ['progress', 'blocker', 'decision', 'bug_fix', 'note']
 PRIORITIES = ['low', 'medium', 'high', 'critical']
 
 

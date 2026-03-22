@@ -20,6 +20,10 @@ function initRealtimeEvents() {
           if (location.hash.includes('/tasks')) renderTasks(window._pid);
           else loadSidebar(); // just update sidebar counts
         }
+      } else if (type === 'update_created' || type === 'update_deleted') {
+        if (window._pid === data.project_id && typeof refreshUpdatesIfActive === 'function') {
+          refreshUpdatesIfActive(data.project_id);
+        }
       } else if (type === 'changelog_created') {
         if (window._pid === data.project_id || !window._pid) {
           handleRealtimeChangelog(data);

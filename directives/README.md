@@ -12,3 +12,4 @@ Each directive should follow a standard format:
 
 ## Directives
 - **plano_project_oversight.md**: Manages project progress, tasks, and status reports for the Plano project.
+- **plano_post_update_standard.md**: Defines the detailed standard for progress updates via `mcp_plano_post_update`.

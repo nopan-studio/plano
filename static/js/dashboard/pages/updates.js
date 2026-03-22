@@ -8,6 +8,8 @@ async function renderUpdates(pid) {
   setBreadcrumb([{label:'Overview',href:'#/'},{label:proj.name,href:`#/projects/${pid}`},{label:'Updates'}]);
   
   window._project_tasks = tasks;
+  window._all_updates = updates;
+  const filter = window._update_filter || 'all';
 
   view(`
     <div class="page-hd">
@@ -15,11 +17,21 @@ async function renderUpdates(pid) {
         <h1>Updates</h1>
         <div class="sub"> workspace progress and important team decisions</div>
       </div>
-      <button class="btn btn-acc btn-sm" style="margin-left:auto" onclick="openPostUpdateModal(${pid})">+ Update</button>
+      <div style="margin-left:auto; display:flex; gap:8px; align-items:center">
+        <select class="btn btn-out btn-sm" onchange="setUpdateFilter(this.value)" style="width:auto; padding:4px 8px">
+          <option value="all" ${filter==='all'?'selected':''}>All Types</option>
+          <option value="progress" ${filter==='progress'?'selected':''}>Progress</option>
+          <option value="bug_fix" ${filter==='bug_fix'?'selected':''}>Bug Fixes</option>
+          <option value="blocker" ${filter==='blocker'?'selected':''}>Blockers</option>
+          <option value="decision" ${filter==='decision'?'selected':''}>Decisions</option>
+          <option value="note" ${filter==='note'?'selected':''}>Notes</option>
+        </select>
+        <button class="btn btn-acc btn-sm" onclick="openPostUpdateModal(${pid})">+ Update</button>
+      </div>
     </div>
     <div class="prose-wrap">
       <div id="updates-feed">
-        ${updates.length ? updates.map(u=>{
+        ${updates.filter(u => filter === 'all' || u.update_type === filter).length ? updates.filter(u => filter === 'all' || u.update_type === filter).map(u=>{
           const t = tasks.find(x=>x.id===u.task_id);
           const fileCount = u.files_meta ? u.files_meta.length : 0;
           return `
@@ -63,6 +75,7 @@ window.openPostUpdateModal = function(pid) {
               <label>Update Type</label>
               <select id="uf-type">
                 <option value="progress">Progress</option>
+                <option value="bug_fix">Bug Fix</option>
                 <option value="blocker">Blocker</option>
                 <option value="decision">Decision</option>
                 <option value="note">Note</option>
@@ -113,6 +126,19 @@ window.deleteUpdate = async function(pid,uid){
   renderUpdates(pid); 
 };
 
+window.setUpdateFilter = function(val) {
+  window._update_filter = val;
+  const pid = window._pid;
+  if(pid) renderUpdates(pid);
+};
+
+// SSE hooks
+window.refreshUpdatesIfActive = function(pid) {
+  if (window._pid === pid && location.hash.includes('/updates')) {
+    renderUpdates(pid);
+  }
+};
+
 window.openUpdateDetail = async function(pid, uid) {
   const [updates, tasks] = await Promise.all([
     api('GET',`/api/projects/${pid}/updates`),
@@ -122,14 +148,14 @@ window.openUpdateDetail = async function(pid, uid) {
   if (!u) return;
   const t = tasks.find(x=>x.id===u.task_id);
 
-  const iconMap = {progress:'🟢',blocker:'🔴',decision:'🟣',note:'⚪'};
+  const iconMap = {progress:'🟢',bug_fix:'🐛',blocker:'🔴',decision:'🟣',note:'⚪'};
   document.getElementById('detail-modal-root').innerHTML = `
     <div class="detail-overlay" onclick="if(event.target===this)closeDetailModal()">
       <div class="detail-modal">
         <div class="dm-header">
           <div class="dm-header-icon">${iconMap[u.update_type]||'📝'}</div>
           <div class="dm-header-body">
-            <h2>${u.update_type.charAt(0).toUpperCase()+u.update_type.slice(1)} Update</h2>
+            <h2>${u.update_type.replace('_',' ').charAt(0).toUpperCase()+u.update_type.replace('_',' ').slice(1)} Update</h2>
             <div class="dm-meta">
               <span class="update-type-pill up-${u.update_type}">${u.update_type}</span>
               <span class="update-meta">${new Date(u.created_at).toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</span>

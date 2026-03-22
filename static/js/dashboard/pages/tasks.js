@@ -254,9 +254,9 @@ window.openTaskDetail = async function(pid, tid) {
         </div>
         <div class="dm-footer">
           <button class="btn btn-ghost btn-sm" style="color:var(--rose)" onclick="deleteTask(${pid},${tid})">Delete</button>
-          ${(t.status === 'done' || t.status === 'review') 
+          ${(t.status === 'done' || t.status === 'review' || t.status === 'bugs') 
             ? `<button class="btn btn-ghost btn-sm" id="dm-archive-btn" style="margin-right:auto" onclick="archiveTask(${pid},${tid})">Archive</button>` 
-            : `<button class="btn btn-ghost btn-sm" style="margin-right:auto;opacity:0.5" disabled title="Task must be Done or Review to archive">Archive</button>`
+            : `<button class="btn btn-ghost btn-sm" style="margin-right:auto;opacity:0.5" disabled title="Task must be Done, Review or Bug to archive">Archive</button>`
           }
           <button class="btn btn-acc btn-sm" onclick="saveTaskDetail(${pid},${tid})">Save Changes</button>
         </div>

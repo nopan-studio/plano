@@ -217,7 +217,7 @@ textarea{resize:vertical;min-height:70px}
 .update-post:hover{border-color:var(--border2)}
 .update-post-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
 .update-type-pill{font-size:10px;font-weight:700;padding:3px 10px;border-radius:12px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em}
-.up-progress{background:var(--teal-dim);color:var(--teal)}.up-blocker{background:var(--rose-dim);color:var(--rose)}.up-decision{background:var(--purple-dim);color:var(--purple)}.up-note{background:var(--surface2);color:var(--text-mid)}
+.up-progress{background:var(--teal-dim);color:var(--teal)}.up-blocker{background:var(--rose-dim);color:var(--rose)}.up-decision{background:var(--purple-dim);color:var(--purple)}.up-bug_fix{background:var(--rose-dim);color:var(--rose)}.up-note{background:var(--surface2);color:var(--text-mid)}
 .update-meta{font-size:11px;color:var(--text-dim);font-family:var(--mono)}
 .update-body{font-size:14px;line-height:1.7;color:var(--text);word-break:break-word}
 .update-body strong{font-weight:700;color:var(--text)}

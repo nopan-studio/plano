@@ -1,5 +1,5 @@
 window.renderArchive = async function(pid) {
-  const [proj, tasks] = await Promise.all([api('GET', `/api/projects/${pid}`), api('GET', `/api/projects/${pid}/tasks`)]);
+  const [proj, tasks] = await Promise.all([api('GET', `/api/projects/${pid}`), api('GET', `/api/projects/${pid}/tasks?include_archived=true`)]);
   setActiveProject({id:pid,name:proj.name});
   setBreadcrumb([{label:'Overview',href:'#/'},{label:proj.name,href:`#/projects/${pid}`},{label:'Archive'}]);
   setPageTitle('Archive • ' + proj.name);

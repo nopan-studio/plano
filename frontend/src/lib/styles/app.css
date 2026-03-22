@@ -1,0 +1,121 @@
+:root {
+  /* Core Colors - Refined for premium look */
+  --bg:          #080808;
+  --panel:       #121212;
+  --panel2:      #181818;
+  --surface:     #1d1d1d;
+  --surface2:    #252525;
+  --border:      rgba(255,255,255,0.06);
+  --border2:     rgba(255,255,255,0.12);
+  --text:        #f0f0f0;
+  --text-mid:    #a0a0a0;
+  --text-dim:    #666;
+  
+  /* Primary Accent - Vibrant HSL */
+  --accent-h:    7;
+  --accent-s:    100%;
+  --accent-l:    68%;
+  --accent:      hsl(var(--accent-h), var(--accent-s), var(--accent-l));
+  --accent-dim:  hsla(var(--accent-h), var(--accent-s), var(--accent-l), 0.1);
+  --accent-glow: hsla(var(--accent-h), var(--accent-s), var(--accent-l), 0.25);
+  
+  /* Semantic Colors */
+  --green:       #4ade80;
+  --green-dim:   rgba(74,222,128,0.1);
+  --blue:        #60a5fa;
+  --blue-dim:    rgba(96,165,250,0.1);
+  --amber:       #fbbf24;
+  --amber-dim:   rgba(251,191,36,0.1);
+  --rose:        #fb7185;
+  --rose-dim:    rgba(251,113,133,0.1);
+  --purple:      #a78bfa;
+  --purple-dim:  rgba(167,139,250,0.1);
+  --teal:        #2dd4bf;
+  --teal-dim:    rgba(45,212,191,0.1);
+  --indigo:      #818cf8;
+  --indigo-dim:  rgba(129,140,248,0.1);
+
+  /* Glassmorphism & Effects */
+  --glass:       rgba(20,20,20,0.7);
+  --glass-blur:  blur(12px);
+  --shadow-sm:   0 2px 8px rgba(0,0,0,0.4);
+  --shadow-md:   0 8px 24px rgba(0,0,0,0.6);
+  --shadow-lg:   0 16px 48px rgba(0,0,0,0.8);
+  
+  /* Typography */
+  --mono:        'JetBrains Mono', monospace;
+  --sans:        'Outfit', sans-serif;
+  
+  /* Border Radius */
+  --r:           8px;
+  --r-lg:        16px;
+
+  /* Editor Specifics */
+  --canvas-bg:    #0a0a0a;
+  --dot-color:    rgba(255,255,255,0.05);
+  --node-bg:      #181818;
+  --node-border:  rgba(255,255,255,0.08);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+a { 
+  color: inherit; 
+  text-decoration: none; 
+  transition: color 0.15s;
+}
+
+button { 
+  cursor: pointer; 
+  font-family: var(--sans);
+  border: none;
+  background: none;
+  outline: none;
+}
+
+/* Global Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-in {
+  animation: fadeIn 0.4s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+::selection {
+  background: var(--accent);
+  color: white;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border2);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-dim);
+}

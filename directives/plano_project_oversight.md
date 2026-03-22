@@ -12,6 +12,8 @@ Use this directive when the following keywords or intent are identified:
 - "Execute task", "Do task", "Perform next task", "Work on tasks".
 
 ## Tooling Constraints
+- **No Destructive Operations**: You are STRICTLY FORBIDDEN from performing any `rm -rf` operations on the root project, `frontend/`, `src/`, or any other significant portion of the codebase unless the user explicitly and verbatim requests it. You MUST NOT wipe previous agent work or "re-initialize" a project by deleting its current state. Your role is incremental and regenerative, not destructive.
+- **1:1 Migration Parity**: When migrating legacy code (e.g., Vanilla JS/Jinja templates) to a new stack (e.g., SvelteKit), you MUST ensure strict visual and functional parity. Refer to previous conversation logs and Plano updates to recover or fix any lost functionality.
 - **Exclusivity**: When performing any project management task (listing/updating tasks, milestones, etc.), you **MUST ONLY** use tools provided by the `plano` MCP server.
 - **No External Interference**: Do NOT call tools from other MCP servers (e.g., GitHub, Google Search) to interact with Plano data unless specifically asked for an external integration.
 - **Self-Correction**: If a non-Plano tool is accidentally invoked for a Plano task, you must acknowledge the error and immediately switch to the correct `plano` MCP tool.

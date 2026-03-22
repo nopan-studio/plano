@@ -4,6 +4,7 @@ import json
 from app import db
 from app.models import Idea, IDEA_STATUSES
 from app.changelog import log_change, log_field_changes
+from app.events import event_bus
 
 ideas_bp = Blueprint('ideas', __name__)
 
@@ -52,14 +53,14 @@ def create_idea():
     db.session.commit()
     if idea.project_id:
         log_change(idea.project_id, 'idea', idea.id, 'created')
+    
+    event_bus.broadcast('idea_created', idea.to_dict())
     return ok(idea.to_dict(), 201)
-
 
 @ideas_bp.route('/api/ideas/<int:iid>', methods=['GET'])
 def get_idea(iid):
     idea = db.get_or_404(Idea, iid)
     return ok(idea.to_dict())
-
 
 @ideas_bp.route('/api/ideas/<int:iid>', methods=['PUT', 'PATCH'])
 def update_idea(iid):
@@ -86,6 +87,8 @@ def update_idea(iid):
     if idea.project_id:
         new = idea.to_dict()
         log_field_changes(idea.project_id, 'idea', idea.id, old, new)
+    
+    event_bus.broadcast('idea_updated', idea.to_dict())
     return ok(idea.to_dict())
 
 
@@ -97,6 +100,8 @@ def delete_idea(iid):
     db.session.commit()
     if project_id:
         log_change(project_id, 'idea', iid, 'deleted')
+    
+    event_bus.broadcast('idea_deleted', {'id': iid, 'project_id': project_id})
     return ok({'deleted': True, 'id': iid})
 
 
@@ -105,4 +110,6 @@ def vote_idea(iid):
     idea = db.get_or_404(Idea, iid)
     idea.votes += 1
     db.session.commit()
+    
+    event_bus.broadcast('idea_updated', idea.to_dict())
     return ok(idea.to_dict())

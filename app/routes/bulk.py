@@ -128,4 +128,8 @@ def bulk_ops(pid, did):
 
     d.updated_at = datetime.utcnow()
     db.session.commit()
+    
+    from app.events import event_bus
+    event_bus.broadcast('board_updated', d.to_dict(full=True))
+    
     return ok({'results': results, 'diagram': d.to_dict(full=True)})

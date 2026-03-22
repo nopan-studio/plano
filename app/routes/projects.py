@@ -107,10 +107,21 @@ def update_project(pid):
             else:
                 setattr(p, df, None)
 
+    if 'kanban_order' in body:
+        import json
+        p.kanban_order = json.dumps(body['kanban_order'])
+    
     p.updated_at = datetime.utcnow()
     new = p.to_dict()
     log_field_changes(p.id, 'project', p.id, old, new)
     db.session.commit()
+    
+    from app.events import event_bus
+    event_bus.broadcast('kanban_order_updated', {
+        'project_id': p.id,
+        'kanban_order': new.get('kanban_order', {})
+    })
+    
     return ok(p.to_dict(summary=True))
 
 

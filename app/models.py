@@ -43,6 +43,7 @@ class Project(db.Model):
     start_date = db.Column(db.Date, nullable=True)
     target_date = db.Column(db.Date, nullable=True)
     progress_pct = db.Column(db.Integer, default=0)
+    kanban_order = db.Column(db.Text, default='{}') # JSON mapping status -> [task_ids]
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -61,6 +62,7 @@ class Project(db.Model):
             start_date=self.start_date.isoformat() if self.start_date else None,
             target_date=self.target_date.isoformat() if self.target_date else None,
             progress_pct=self.progress_pct,
+            kanban_order=json.loads(self.kanban_order or '{}'),
             created_at=self.created_at.isoformat() + 'Z',
             updated_at=self.updated_at.isoformat() + 'Z',
         )

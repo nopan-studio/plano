@@ -5,3 +5,4 @@ plano.db
 plano.log
 .plano.pid
 .DS_Store
+node_modules/

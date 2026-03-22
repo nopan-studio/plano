@@ -5,6 +5,7 @@ import json
 from app import db
 from app.models import Diagram, Node, Edge, Project, DIAGRAM_TYPES, NODE_TYPES, EDGE_TYPES
 from app.changelog import log_change, log_field_changes
+from app.events import event_bus
 
 boards_bp = Blueprint('boards', __name__)
 
@@ -66,6 +67,10 @@ def create_diagram(pid):
     db.session.add(d)
     db.session.commit()
     log_change(pid, 'board', d.id, 'created')
+    
+    # Broadcast creation
+    event_bus.broadcast('board_created', d.to_dict())
+    
     return ok(d.to_dict(full=True), 201)
 
 
@@ -96,6 +101,10 @@ def update_diagram(pid, did):
     db.session.commit()
     new = d.to_dict()
     log_field_changes(pid, 'board', d.id, old, new)
+    
+    # Broadcast update
+    event_bus.broadcast('board_updated', d.to_dict())
+    
     return ok(d.to_dict(full=True))
 
 
@@ -106,6 +115,10 @@ def delete_diagram(pid, did):
     db.session.delete(d)
     db.session.commit()
     log_change(pid, 'board', did, 'deleted')
+    
+    # Broadcast deletion
+    event_bus.broadcast('board_deleted', {'id': did, 'project_id': pid})
+    
     return ok({'deleted': True, 'id': did})
 
 

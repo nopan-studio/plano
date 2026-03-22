@@ -1,5 +1,9 @@
 function esc(s) { const d=document.createElement('div'); d.textContent=String(s??''); return d.innerHTML; }
 
+window.setPageTitle = function(title) {
+  document.title = title ? `${title} · Plano` : 'Plano';
+}
+
 function md(s) {
   if (!s) return '';
   // Pre-escape HTML but preserve newlines

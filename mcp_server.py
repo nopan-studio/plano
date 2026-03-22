@@ -61,9 +61,15 @@ def _ensure_server():
     if _is_server_running():
         return
 
-    venv_python = PROJECT_DIR / "venv" / "bin" / "python"
-    if not venv_python.exists():
-        venv_python = PROJECT_DIR / ".venv" / "bin" / "python"
+    if os.name == "nt":  # Windows
+        venv_python = PROJECT_DIR / "venv" / "Scripts" / "python.exe"
+        if not venv_python.exists():
+            venv_python = PROJECT_DIR / ".venv" / "Scripts" / "python.exe"
+    else:  # Unix (Linux/macOS)
+        venv_python = PROJECT_DIR / "venv" / "bin" / "python"
+        if not venv_python.exists():
+            venv_python = PROJECT_DIR / ".venv" / "bin" / "python"
+
     if not venv_python.exists():
         venv_python = Path(sys.executable)
 
@@ -660,7 +666,7 @@ def list_updates(project_id: int, update_type: str = "") -> str:
 
     Args:
         project_id: The project ID.
-        update_type: Filter by type (progress/blocker/decision/note). Empty = all.
+        update_type: Filter by type (progress/blocker/decision/bug_fix/note). Empty = all.
     """
     path = f"/api/projects/{project_id}/updates"
     if update_type:
@@ -681,7 +687,7 @@ def post_update(
     Args:
         project_id: The project ID.
         content: Update content (supports markdown).
-        update_type: Type (progress/blocker/decision/note).
+        update_type: Type (progress/blocker/decision/bug_fix/note).
         task_id: Optionally link to a task (-1 = none).
     """
     body: dict = {"content": content, "update_type": update_type, "files_meta": json.loads(files_meta)}
@@ -1254,11 +1260,11 @@ def _git_changed_files(workspace_path: str, since_ref: str = "") -> list[dict]:
 
         if since_ref:
             # Diff against a specific ref (commit, branch, tag)
-            cmd = ["git", "diff", "--name-status", since_ref, "HEAD"]
+            cmd = ["git", "--no-pager", "diff", "--name-status", since_ref, "HEAD"]
         else:
             # Show all uncommitted changes (staged + unstaged + untracked)
             # First: staged + unstaged
-            cmd = ["git", "diff", "--name-status", "HEAD"]
+            cmd = ["git", "--no-pager", "diff", "--name-status", "HEAD"]
 
         proc = _sp.run(cmd, cwd=cwd, capture_output=True, text=True, timeout=15)
         for line in proc.stdout.strip().splitlines():
@@ -1266,7 +1272,12 @@ def _git_changed_files(workspace_path: str, since_ref: str = "") -> list[dict]:
             if len(parts) == 2:
                 code = parts[0][0]  # first char (R100 -> R)
                 action = status_map.get(code, "modified")
-                results.append({"action": action, "path": parts[1]})
+                
+                # Normalize git output paths (always use forward slashes) for current OS
+                rel_path = parts[1]
+                filepath = os.path.normpath(os.path.join(cwd, rel_path))
+                mtime = os.path.getmtime(filepath) if os.path.exists(filepath) else 0
+                results.append({"action": action, "path": rel_path, "mtime": mtime})
 
         # Also capture untracked files if no ref specified
         if not since_ref:
@@ -1276,7 +1287,9 @@ def _git_changed_files(workspace_path: str, since_ref: str = "") -> list[dict]:
             )
             for line in proc2.stdout.strip().splitlines():
                 if line:
-                    results.append({"action": "added", "path": line})
+                    filepath = os.path.normpath(os.path.join(cwd, line))
+                    mtime = os.path.getmtime(filepath) if os.path.exists(filepath) else 0
+                    results.append({"action": "added", "path": line, "mtime": mtime})
 
     except Exception:
         # Silent fail for git-related issues to keep tool stable
@@ -1370,11 +1383,40 @@ def capture_file_changes(
             
             if isinstance(task_meta, dict) and "capture_snapshot" in task_meta:
                 snapshot = task_meta["capture_snapshot"]
-                snapshot_paths = {s["path"] for s in snapshot}
-                # Only keep files that WEREN'T in the snapshot
-                changes = [c for c in changes if c["path"] not in snapshot_paths]
+                snapshot_mtimes = {s["path"]: s.get("mtime", 0) for s in snapshot}
+                
+                filtered_changes = []
+                for c in changes:
+                    c_path = c["path"]
+                    if c_path not in snapshot_mtimes:
+                        # File was not in snapshot (newly modified)
+                        filtered_changes.append(c)
+                    else:
+                        # File was in snapshot, keep only if modified since snapshot
+                        if c.get("mtime", 0) > snapshot_mtimes[c_path]:
+                            filtered_changes.append(c)
+                changes = filtered_changes
         except:
             pass
+
+    import subprocess as _sp
+    cwd = path or "."
+    for c in changes:
+        if c.get("action") == "deleted":
+            c["diff"] = "<File deleted>"
+        else:
+            try:
+                proc = _sp.run(["git", "--no-pager", "diff", "HEAD", "--", c["path"]], cwd=cwd, capture_output=True, text=True, timeout=15)
+                if proc.stdout:
+                    c["diff"] = proc.stdout[:2000] + ("\n...[diff truncated]" if len(proc.stdout) > 2000 else "")
+                else:
+                    proc2 = _sp.run(["git", "--no-pager", "ls-files", "--others", "--exclude-standard", c["path"]], cwd=cwd, capture_output=True, text=True, timeout=15)
+                    if proc2.stdout.strip() == c["path"]:
+                        c["diff"] = "<New untracked file>"
+                    else:
+                        c["diff"] = "<Binary or no delta>"
+            except Exception as e:
+                c["diff"] = f"<Failed to capture diff: {type(e).__name__} - {str(e)}>"
 
     result: dict = {
         "workspace": path,

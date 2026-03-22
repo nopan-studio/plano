@@ -26,6 +26,7 @@ This project follows an agent-friendly architecture that separates concerns betw
 3.  **Update Directives**: If you learn new constraints or better ways to manage the project, update the corresponding markdown file in `directives/`.
 4.  **Tool Exclusivity**: You MUST ONLY use the **Plano MCP** tools for managing tasks, milestones, and project metadata. Avoid using external MCP tools (e.g., GitHub, Search) for internal project logic.
 5.  **Mandatory Completion Workflow**: You MUST ALWAYS call `mcp_plano_capture_file_changes`, `mcp_plano_update_task`, and `mcp_plano_post_update` (in this precise order) before completing any task. Bypassing these steps is UNACCEPTABLE.
+6.  **No Direct-to-Done**: You MUST move tasks to the `review` status upon completion. Moving a task directly to `done` is prohibited unless the user explicitly requests it. Validation belongs to the user.
 
 ## Directory Structure
 - `directives/` - Agent SOPs and tactical instructions.

@@ -2,6 +2,7 @@ async function renderMilestones(pid) {
   const [proj, ms] = await Promise.all([api('GET',`/api/projects/${pid}`), api('GET',`/api/projects/${pid}/milestones`)]);
   setActiveProject({id:pid,name:proj.name});
   setBreadcrumb([{label:'Overview',href:'#/'},{label:proj.name,href:`#/projects/${pid}`},{label:'Milestones'}]);
+  setPageTitle('Milestones • ' + proj.name);
   window._milestones_data = ms;
 
   const pending = ms.filter(m=>m.status==='pending');

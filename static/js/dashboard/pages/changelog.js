@@ -8,6 +8,7 @@ async function renderChangelog(pid) {
   ]);
   setActiveProject({id:pid,name:proj.name});
   setBreadcrumb([{label:'Overview',href:'#/'},{label:proj.name,href:`#/projects/${pid}`},{label:'Project Logs'}]);
+  setPageTitle('Project Logs • ' + proj.name);
   window._recent_changelog = cl.entries;
 
   // Build name lookup maps

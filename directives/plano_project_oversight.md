@@ -15,6 +15,7 @@ Use this directive when the following keywords or intent are identified:
 - **Exclusivity**: When performing any project management task (listing/updating tasks, milestones, etc.), you **MUST ONLY** use tools provided by the `plano` MCP server.
 - **No External Interference**: Do NOT call tools from other MCP servers (e.g., GitHub, Google Search) to interact with Plano data unless specifically asked for an external integration.
 - **Self-Correction**: If a non-Plano tool is accidentally invoked for a Plano task, you must acknowledge the error and immediately switch to the correct `plano` MCP tool.
+- **No `%SAME%` Placeholder in MCP Tools**: When using `mcp_plano_update_task` or any other Plano MCP tool, **NEVER** pass the literal string `"%SAME%"` for fields like `title`, `description`, etc. The `%SAME%` placeholder is exclusively for the `task_boundary` UI tool. To keep a field unchanged in Plano MCP tools, check the schema (usually pass an empty string `""` or omit the field).
 
 ## Procedure
 1.  **Identify Project**: If multiple projects exist, list them using `mcp_plano_list_projects` and identify the one related to the current workspace (ID 2 for "Plano PM").
@@ -29,6 +30,7 @@ Use this directive when the following keywords or intent are identified:
 ## Task Execution
 > [!CAUTION]
 > **NO BYPASSING POLICY**: You MUST NOT bypass the project management documentation steps. Every task completion MUST be backed by a file change capture, a status update, and a detailed post update. 
+> **NO DIRECT-TO-DONE**: You are STRICTLY FORBIDDEN from moving a task directly to the `done` status. All completed work MUST first be moved to the `review` status for user validation. Only the user can authorize moving a task to `done`, or you may do so ONLY if the user explicitly says "mark as done" or "complete task to done".
 
 When tasked with performing a task from Plano or when a new milestone is created:
 1.  **Mandatory Initial Task**: **When a milestone is created, you MUST immediately create at least one associated task using `mcp_plano_create_task` under that milestone.** This ensures no milestone is left without actionable items.
@@ -36,8 +38,8 @@ When tasked with performing a task from Plano or when a new milestone is created
 3.  **Confirmation**: Briefly confirm the task being started. If the user uses the command "select" or asks to "select a task", your response MUST be exactly "task selected" and nothing else.
 4.  **Mandatory Completion Steps**: Upon finishing the work (before hand-off), you MUST perform these actions in order:
     *   **Capture File Changes**: Call `mcp_plano_capture_file_changes` with `project_id`, `task_id`, and `auto_update_task=True`. This is CRITICAL for documenting exactly which files were affected.
-    *   **Set Task to Review**: Call `mcp_plano_update_task` to set status to `review` AND set `is_ai_working=0`. **Removing the AI working status is mandatory.** You MUST always use `review` status upon completion unless the user has explicitly instructed you to mark it as `done`.
-    *   **Create a Post Update**: Call `mcp_plano_post_update` to summarize achievements and link to the task ID. Follow the detailed format specified in [plano_post_update_standard.md](directives/plano_post_update_standard.md). **This step is MANDATORY and cannot be bypassed under any circumstances.**
+    *   **Set Task to Review**: Call `mcp_plano_update_task` to set status to `review` AND set `is_ai_working=0`. **Removing the AI working status is mandatory.** You are PROHIBITED from using the `done` status here unless specifically requested.
+    *   **Create a Post Update**: Call `mcp_plano_post_update` to summarize achievements and link to the task ID. If resolving a bug task (status `bugs`), you **MUST** set `update_type="bug_fix"`, otherwise use `"progress"`. Follow the detailed format specified in [plano_post_update_standard.md](directives/plano_post_update_standard.md). **This step is MANDATORY and cannot be bypassed under any circumstances.**
 5.  **Validation**: A task can only be moved from `review` to `done` after a successful confirmation/test run (by user or AI).
 6.  **Stop & Ask**: After completing these steps (moving to `review`), **STOP and ask the user** if they want to continue or if they have other instructions. **Do NOT proceed to the next task without explicit user approval.**
 

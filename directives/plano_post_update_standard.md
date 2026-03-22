@@ -40,4 +40,5 @@ This directive must be followed whenever:
 
 ## Tooling Integration
 When using `mcp_plano_post_update`, the `content` field **MUST** be populated using this markdown-formatted structure. 
+If you are resolving a bug task (status `bugs`), you **MUST** ensure the `update_type` argument is set to `"bug_fix"`. For all other task types, default to `"progress"`.
 Use the output from `mcp_plano_capture_file_changes` to populate the "Files Added, Modified, or Deleted" section accurately.

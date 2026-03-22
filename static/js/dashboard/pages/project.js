@@ -8,6 +8,7 @@ async function renderProject(pid) {
   setActiveProject({id:pid, name:proj.name});
   window._pid = pid;
   setBreadcrumb([{label:'Overview',href:'#/'},{label:proj.name}]);
+  setPageTitle(proj.name);
 
   const byStatus = dash.tasks_by_status || {};
   view(`

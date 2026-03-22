@@ -6,6 +6,7 @@ async function renderUpdates(pid) {
   ]);
   setActiveProject({id:pid,name:proj.name});
   setBreadcrumb([{label:'Overview',href:'#/'},{label:proj.name,href:`#/projects/${pid}`},{label:'Updates'}]);
+  setPageTitle('Updates • ' + proj.name);
   
   window._project_tasks = tasks;
   window._all_updates = updates;

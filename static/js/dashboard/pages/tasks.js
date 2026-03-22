@@ -6,6 +6,7 @@ async function renderTasks(pid) {
   ]);
   setActiveProject({id:pid,name:proj.name});
   setBreadcrumb([{label:'Overview',href:'#/'},{label:proj.name,href:`#/projects/${pid}`},{label:'Tasks'}]);
+  setPageTitle('Tasks • ' + proj.name);
   const msOpts = milestones.map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join('');
   const activeTasks = (tasks||[]).filter(t => t.status !== 'archived');
   window._tasks = activeTasks; window._milestones = milestones;
@@ -62,7 +63,7 @@ async function renderTasks(pid) {
       </div>
       <div class="form-row">
         <select id="tf-status" style="flex:1;background:var(--surf);border:1px solid var(--b2);border-radius:var(--r);color:var(--text);font-family:var(--sans);font-size:13px;padding:7px 10px">
-          <option value="todo">To Do</option><option value="in_progress">In Progress</option><option value="review">Review</option><option value="done">Done</option><option value="bugs">Bugs</option>
+          <option value="todo">To Do</option><option value="in_progress">In Progress</option><option value="bugs">Bugs</option><option value="review">Review</option><option value="done">Done</option>
         </select>
         <select id="tf-priority" style="flex:1;background:var(--surf);border:1px solid var(--b2);border-radius:var(--r);color:var(--text);font-family:var(--sans);font-size:13px;padding:7px 10px">
           <option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option><option value="critical">Critical</option>
@@ -99,6 +100,16 @@ async function renderTasks(pid) {
         <div class="kanban-col-sub">Work currently being tackled</div>
         <div class="kanban-col-body" data-status="in_progress">${progress.map(kCard).join('')||'<div style="text-align:center;padding:20px;color:var(--dim);font-size:12px">No tasks</div>'}</div>
       </div>
+      <div class="kanban-col col-bugs">
+        <div class="kanban-col-hd">
+          <h3><span class="status-circle"></span> Bugs <span class="cnt">${bugs.length}</span></h3>
+          <div class="kanban-col-hd-right">
+            <button class="add-task-col-btn" onclick="toggleTaskForm(${pid}, 'bugs')" title="Add task to Bugs">+</button>
+          </div>
+        </div>
+        <div class="kanban-col-sub">Issues needing attention</div>
+        <div class="kanban-col-body" data-status="bugs">${bugs.map(kCard).join('')||'<div style="text-align:center;padding:20px;color:var(--dim);font-size:12px">No bugs recorded</div>'}</div>
+      </div>
       <div class="kanban-col col-review">
         <div class="kanban-col-hd">
           <h3><span class="status-circle"></span> Review <span class="cnt">${review.length}</span></h3>
@@ -119,16 +130,6 @@ async function renderTasks(pid) {
         </div>
         <div class="kanban-col-sub">Completed successfully</div>
         <div class="kanban-col-body" data-status="done">${done.map(kCard).join('')||'<div style="text-align:center;padding:20px;color:var(--dim);font-size:12px">No completed tasks</div>'}</div>
-      </div>
-      <div class="kanban-col col-bugs">
-        <div class="kanban-col-hd">
-          <h3><span class="status-circle"></span> Bugs <span class="cnt">${bugs.length}</span></h3>
-          <div class="kanban-col-hd-right">
-            <button class="add-task-col-btn" onclick="toggleTaskForm(${pid}, 'bugs')" title="Add task to Bugs">+</button>
-          </div>
-        </div>
-        <div class="kanban-col-sub">Issues needing attention</div>
-        <div class="kanban-col-body" data-status="bugs">${bugs.map(kCard).join('')||'<div style="text-align:center;padding:20px;color:var(--dim);font-size:12px">No bugs recorded</div>'}</div>
       </div>
     </div>
   `);

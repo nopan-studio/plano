@@ -2,6 +2,7 @@ async function renderBoards(pid) {
   const [proj, boards] = await Promise.all([api('GET',`/api/projects/${pid}`), api('GET',`/api/projects/${pid}/boards`)]);
   setActiveProject({id:pid,name:proj.name});
   setBreadcrumb([{label:'Overview',href:'#/'},{label:proj.name,href:`#/projects/${pid}`},{label:'Boards'}]);
+  setPageTitle('Boards • ' + proj.name);
   view(`
     <div class="page-hd">
       <div>

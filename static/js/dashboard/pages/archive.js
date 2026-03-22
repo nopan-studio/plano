@@ -2,6 +2,7 @@ window.renderArchive = async function(pid) {
   const [proj, tasks] = await Promise.all([api('GET', `/api/projects/${pid}`), api('GET', `/api/projects/${pid}/tasks`)]);
   setActiveProject({id:pid,name:proj.name});
   setBreadcrumb([{label:'Overview',href:'#/'},{label:proj.name,href:`#/projects/${pid}`},{label:'Archive'}]);
+  setPageTitle('Archive • ' + proj.name);
   
   const archived = (tasks||[]).filter(t => t.status === 'archived');
   

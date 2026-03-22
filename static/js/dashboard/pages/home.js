@@ -1,5 +1,6 @@
 async function renderHome() {
   setBreadcrumb([{label:'Dashboard'}]);
+  setPageTitle('Dashboard');
   await loadSidebar();
   const projects = _projects;
 

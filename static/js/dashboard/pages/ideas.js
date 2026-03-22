@@ -2,11 +2,13 @@ async function renderIdeas(pid) {
   const [proj, ideas] = await Promise.all([api('GET',`/api/projects/${pid}`),api('GET',`/api/ideas?project_id=${pid}`)]);
   setActiveProject({id:pid,name:proj.name});
   setBreadcrumb([{label:'Overview',href:'#/'},{label:proj.name,href:`#/projects/${pid}`},{label:'Ideas'}]);
+  setPageTitle('Ideas • ' + proj.name);
   renderIdeasView(pid, ideas, true);
 }
 async function renderAllIdeas() {
   const ideas = await api('GET','/api/ideas');
   setBreadcrumb([{label:'Overview',href:'#/'},{label:'All Ideas'}]);
+  setPageTitle('All Ideas');
   renderIdeasView(null, ideas, false);
 }
 function renderIdeasView(pid, ideas, showTabs) {

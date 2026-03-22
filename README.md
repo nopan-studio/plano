@@ -28,6 +28,9 @@ It features built-in visual diagrams alongside standard task tracking so your ar
 
 Plano is built for AI-first development. Follow these steps to set up both the environment and the AI agent directives.
 
+> [!TIP]
+> **New**: AI assistants can use our [AI-Driven Installation Guide (INSTALLATION.md)](INSTALLATION.md) for automated setup and directive adaptation.
+
 ### 1. Project Installation
 
 Clone the repository and set up the Python environment:
@@ -100,6 +103,13 @@ Add the following to your `claude_desktop_config.json` (replacing `/PATH/TO/PLAN
 *Note: The MCP server automatically manages the lifecycle of the Flask backend. On the first tool call, it will start the backend on port 5050 if it isn't already running.*
 
 ## Recent Changes (Changelog)
+
+- **v2.4.0** (2026-03-22):
+  - **Cross-Platform Parity**: Enhanced venv discovery and path normalization for reliable operation on Windows and macOS.
+  - **Native Diff Capture**: Advanced file tracking that captures exact git diff content (staged, unstaged, and untracked) within task metadata.
+  - **Intelligent Snapshotting**: Improved change detection that accurately tracks files even if they had uncommitted changes before a task started.
+  - **Bug Fix Governance**: Introduced a specialized `bug_fix` update type and mandatory post-update standards for bug resolutions.
+  - **Workspace UX**: Implemented dynamic tab titles and addressed issues with improper agent placeholder usage.
 
 - **v2.3.0** (2026-03-22):
   - **AI Adaptation**: Revamped the installation guide to prioritize AI Agent directives and `AGENTS.md` for mandatory project oversight.

@@ -3,6 +3,10 @@ async function openWf(id) {
   S.cur=await api.g(`/api/projects/${window._activePid}/boards/${id}`);
   S.selN=null; S.selE=null;
   document.getElementById('wf-name').value=S.cur.name;
+  
+  // Update document title
+  document.title = `${S.cur.name} • Board • Plano`;
+  
   const pill=document.getElementById('type-pill');
   pill.className=`type-pill ${S.cur.type}`;
   pill.textContent=`● ${TYPE_LABELS[S.cur.type]||S.cur.type}`;

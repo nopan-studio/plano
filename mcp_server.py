@@ -349,14 +349,29 @@ def project_dashboard(project_id: int) -> str:
 # ── Tasks ─────────────────────────────────────────────────────────────────────
 
 @mcp.tool()
-def list_tasks(project_id: int, status: str = "", assignee: str = "", milestone_id: int = -1) -> str:
+def list_tasks(
+    project_id: int, 
+    status: str = "", 
+    assignee: str = "", 
+    milestone_id: int = -1,
+    include_archived: bool = False,
+    fields: str = "id,title,status,priority,assignee"
+) -> str:
     """List tasks in a project, optionally filtered.
+    
+    By default, this tool is optimized for token reduction and returns only 
+    essential fields (id, title, status, priority, assignee). Use the 'fields' 
+    parameter to request more data (e.g. 'description,meta,tags') if needed.
+    Archived tasks are excluded by default.
 
     Args:
         project_id: The project ID.
         status: Filter by status (bugs/todo/in_progress/review/done). Empty = all.
         assignee: Filter by assignee name. Empty = all.
         milestone_id: Filter by milestone ID (-1 = all).
+        include_archived: If True, include tasks with 'archived' status.
+        fields: Comma-separated list of fields to return (default: id,title,status,priority,assignee).
+                Available: id,project_id,milestone_id,title,description,assignee,status,priority,due_date,estimated_hours,actual_hours,tags,is_ai_working,created_at.
     """
     params = []
     if status:
@@ -365,8 +380,13 @@ def list_tasks(project_id: int, status: str = "", assignee: str = "", milestone_
         params.append(f"assignee={assignee}")
     if milestone_id >= 0:
         params.append(f"milestone_id={milestone_id}")
+    if include_archived:
+        params.append("include_archived=true")
+    if fields:
+        params.append(f"fields={fields}")
     path = f"/api/projects/{project_id}/tasks" + ("?" + "&".join(params) if params else "")
     return json.dumps(_api("GET", path), indent=2)
+
 
 
 @mcp.tool()

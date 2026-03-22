@@ -80,7 +80,7 @@ class Project(db.Model):
                     except:
                         pass
                 d['tasks_by_status'][status] = d['tasks_by_status'].get(status, 0) + 1
-            return d
+        return d
 
 
 # ─── Milestone ────────────────────────────────────────────────────────────────
@@ -130,8 +130,9 @@ class Task(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    def to_dict(self):
-        return dict(
+    def to_dict(self, fields=None):
+        """Convert object to dict for serialization. Supports field filtering."""
+        full_dict = dict(
             id=self.id, project_id=self.project_id,
             milestone_id=self.milestone_id,
             title=self.title, description=self.description,
@@ -147,6 +148,12 @@ class Task(db.Model):
             created_at=self.created_at.isoformat() + 'Z',
             updated_at=self.updated_at.isoformat() + 'Z',
         )
+        if fields:
+            if isinstance(fields, str):
+                fields = [f.strip() for f in fields.split(',')]
+            return {f: full_dict[f] for f in fields if f in full_dict}
+        return full_dict
+
 
 
 # ─── ChangeLog ────────────────────────────────────────────────────────────────

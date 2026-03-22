@@ -42,3 +42,11 @@ This directive must be followed whenever:
 When using `mcp_plano_post_update`, the `content` field **MUST** be populated using this markdown-formatted structure. 
 If you are resolving a bug task (status `bugs`), you **MUST** ensure the `update_type` argument is set to `"bug_fix"`. For all other task types, default to `"progress"`.
 Use the output from `mcp_plano_capture_file_changes` to populate the "Files Added, Modified, or Deleted" section accurately.
+## Final Response Rule
+To avoid redundant information and keep the conversation concise, the agent **MUST NOT** summarize the work in the chat after successfully calling `mcp_plano_post_update`. 
+
+Since all technical details are now stored in Plano, the agent's final response should simply be:
+"Task #[ID] is done and update is posted in Plano."
+
+(Replace `[ID]` with the actual task ID number). This encourages the user to view the structured update directly within the system.
+

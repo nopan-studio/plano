@@ -104,6 +104,13 @@ Add the following to your `claude_desktop_config.json` (replacing `/PATH/TO/PLAN
 
 ## Recent Changes (Changelog)
 
+- **v2.5.0** (2026-03-22):
+  - **MCP Token Optimization**: Dramatic **300x reduction** in LLM token usage for project-level task management.
+  - **Intelligent Default Filtering**: Archived tasks are now automatically hidden from `list_tasks` to minimize redundant context.
+  - **Selective Field Projection**: Implemented support for the `fields` parameter in task listings, allowing tools to request only the necessary columns (e.g., `id`, `title`, `status`).
+  - **Adaptive Oversight**: Enhanced the project oversight directive to dynamically identify projects based on workspace context, removing hardcoded IDs.
+  - **Concise AI Communication**: Enforced a new "Final Response Rule" in agent directives to streamline chat feedback following structured Plano updates.
+
 - **v2.4.0** (2026-03-22):
   - **Cross-Platform Parity**: Enhanced venv discovery and path normalization for reliable operation on Windows and macOS.
   - **Native Diff Capture**: Advanced file tracking that captures exact git diff content (staged, unstaged, and untracked) within task metadata.

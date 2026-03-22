@@ -6,7 +6,7 @@ async function renderIdeas(pid) {
   renderIdeasView(pid, ideas, true);
 }
 async function renderAllIdeas() {
-  const ideas = await api('GET','/api/ideas');
+  const ideas = await api('GET', window._global_only ? '/api/ideas?project_id=null' : '/api/ideas');
   setBreadcrumb([{label:'Overview',href:'#/'},{label:'All Ideas'}]);
   setPageTitle('All Ideas');
   renderIdeasView(null, ideas, false);
@@ -18,7 +18,12 @@ function renderIdeasView(pid, ideas, showTabs) {
       <div class="sub">Store and vote on potential workspace features and future plans</div>
     </div>
     <button class="btn btn-acc btn-sm" style="margin-left:auto" onclick="openNewIdeaModal(${pid||'null'})">+ New Idea</button>
-  </div>`;
+  </div>
+  ${!pid ? `<div style="display:flex;gap:12px;margin-bottom:16px;font-size:12px">
+    <button class="btn btn-out btn-xs ${window._global_only?'':'act'}" onclick="window._global_only=false;renderAllIdeas()">All Ideas</button>
+    <button class="btn btn-out btn-xs ${window._global_only?'act':''}" onclick="window._global_only=true;renderAllIdeas()">Global Only</button>
+  </div>` : ''}
+  `;
   view(`
     ${hdr}
     <div class="prose-wrap">
@@ -110,6 +115,13 @@ window.openIdeaDetail = async function(iid, pid) {
               <label>Status</label>
               <select id="dm-idea-status">${['new','exploring','accepted','rejected'].map(s=>`<option value="${s}"${i.status===s?' selected':''}>${s}</option>`).join('')}</select>
             </div>
+            <div class="dm-field">
+              <label>Link to Project</label>
+              <select id="dm-idea-project">
+                <option value="null" ${!i.project_id?'selected':''}>— Global (None) —</option>
+                ${(_projects||[]).map(p=>`<option value="${p.id}" ${i.project_id===p.id?'selected':''}>${esc(p.name)}</option>`).join('')}
+              </select>
+            </div>
           </div>
           ${i.tags&&i.tags.length?`<div class="dm-section" style="margin-top:12px">
             <div class="dm-section-label">Tags</div>
@@ -127,7 +139,8 @@ window.openIdeaDetail = async function(iid, pid) {
 window.saveIdeaDetail = async function(pid, iid) {
   const body = {
     description: document.getElementById('dm-idea-desc').value,
-    status: document.getElementById('dm-idea-status').value
+    status: document.getElementById('dm-idea-status').value,
+    project_id: document.getElementById('dm-idea-project').value === 'null' ? null : +document.getElementById('dm-idea-project').value
   };
   const r = await api('PATCH',`/api/ideas/${iid}`, body);
   if (r.error) return toast(r.error,'err');

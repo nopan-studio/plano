@@ -1,6 +1,6 @@
 // ══ Properties ════════════════════════════════════════════════════════════════
-function openProps(id,kind){document.getElementById('props').classList.add('open');kind==='node'?renderNodeProps(id):renderEdgeProps(id)}
-function closeProps(){document.getElementById('props').classList.remove('open')}
+function openProps(id,kind){document.getElementById('props').classList.add('open');kind==='node'?renderNodeProps(id):renderEdgeProps(id); if(window.syncSel) syncSel()}
+function closeProps(){document.getElementById('props').classList.remove('open'); if(window.syncSel) syncSel()}
 
 function renderNodeProps(id) {
   const n=S.cur.nodes.find(x=>x.id===id); if(!n)return;
@@ -9,7 +9,7 @@ function renderNodeProps(id) {
   document.getElementById('pt').textContent=n.label;
   const all=getCat().flatMap(g=>g.nodes);
   const topts=all.map(nd=>`<option value="${nd.t}" ${n.node_type===nd.t?'selected':''}>${nd.i} ${nd.n}</option>`).join('');
-  const isTab=n.node_type==='table'||n.node_type==='view', isNote=n.node_type==='annotation'||n.node_type==='note';
+  const isTab=n.node_type==='db_table'||n.node_type==='table'||n.node_type==='view', isNote=n.node_type==='annotation'||n.node_type==='note';
   const cols=n.meta?.columns||[];
   document.getElementById('pb').innerHTML=`
     <div class="pg"><div class="plabel">Label</div><input class="pinput" id="pp-l" value="${esc(n.label)}" oninput="up_label(this.value)"></div>
@@ -85,9 +85,9 @@ function renderEdgeProps(id) {
     <div class="dz"><button class="btn btn-danger-soft" style="width:100%;justify-content:center" onclick="delEdge()">× Delete Connection</button></div>`;
 }
 
-async function up_label(v){const n=S.cur.nodes.find(x=>x.id===S.selN);if(!n)return;n.label=v;document.getElementById('pt').textContent=v;refreshNode(n);await api.h(`/api/projects/${window._activePid}/boards/${S.cur.id}/nodes/${n.id}`,{label:v})}
-async function up_type(v){const n=S.cur.nodes.find(x=>x.id===S.selN);if(!n)return;n.node_type=v;const def=getDef(v);const pi=document.getElementById('pi');pi.style.background=def.b;pi.style.color=def.c;pi.textContent=def.i;refreshNode(n);await api.h(`/api/projects/${window._activePid}/boards/${S.cur.id}/nodes/${n.id}`,{node_type:v});renderNodeProps(n.id)}
-async function up_desc(v){const n=S.cur.nodes.find(x=>x.id===S.selN);if(!n)return;n.meta={...n.meta,description:v};refreshNode(n);await api.h(`/api/projects/${window._activePid}/boards/${S.cur.id}/nodes/${n.id}`,{meta:n.meta})}
+async function up_label(v){const n=S.cur.nodes.find(x=>x.id===S.selNs?.[0]);if(!n)return;n.label=v;document.getElementById('pt').textContent=v;refreshNode(n);await api.h(`/api/projects/${window._activePid}/boards/${S.cur.id}/nodes/${n.id}`,{label:v})}
+async function up_type(v){const n=S.cur.nodes.find(x=>x.id===S.selNs?.[0]);if(!n)return;n.node_type=v;const def=getDef(v);const pi=document.getElementById('pi');pi.style.background=def.b;pi.style.color=def.c;pi.textContent=def.i;refreshNode(n);await api.h(`/api/projects/${window._activePid}/boards/${S.cur.id}/nodes/${n.id}`,{node_type:v});renderNodeProps(n.id)}
+async function up_desc(v){const n=S.cur.nodes.find(x=>x.id===S.selNs?.[0]);if(!n)return;n.meta={...n.meta,description:v};refreshNode(n);await api.h(`/api/projects/${window._activePid}/boards/${S.cur.id}/nodes/${n.id}`,{meta:n.meta})}
 async function up_meta(nid,k,v){
   const n=S.cur.nodes.find(x=>x.id===nid); if(!n)return;
   n.meta=n.meta||{}; n.meta[k]=v;
@@ -106,7 +106,7 @@ async function syncExtTable(nid, refNid){
     await api.h(`/api/projects/${window._activePid}/boards/${S.cur.id}/nodes/${nid}`,{meta:n.meta, label:n.label});
   }
 }
-async function up_pos(){const n=S.cur.nodes.find(x=>x.id===S.selN);if(!n)return;const x=+document.getElementById('pp-x').value,y=+document.getElementById('pp-y').value;n.x=x;n.y=y;const el=document.getElementById(`n-${n.id}`);el.style.left=x+'px';el.style.top=y+'px';posAll();await api.h(`/api/projects/${window._activePid}/boards/${S.cur.id}/nodes/${n.id}`,{x,y})}
+async function up_pos(){const n=S.cur.nodes.find(x=>x.id===S.selNs?.[0]);if(!n)return;const x=+document.getElementById('pp-x').value,y=+document.getElementById('pp-y').value;n.x=x;n.y=y;const el=document.getElementById(`n-${n.id}`);el.style.left=x+'px';el.style.top=y+'px';posAll();await api.h(`/api/projects/${window._activePid}/boards/${S.cur.id}/nodes/${n.id}`,{x,y})}
 async function addCol(nid){const n=S.cur.nodes.find(x=>x.id===nid);if(!n)return;n.meta=n.meta||{};n.meta.columns=n.meta.columns||[];n.meta.columns.push({name:'new_col',type:'VARCHAR',pk:false,fk:false});await api.h(`/api/projects/${window._activePid}/boards/${S.cur.id}/nodes/${nid}`,{meta:n.meta});refreshNode(n);renderNodeProps(nid)}
 async function editCol(nid,i,f,v){const n=S.cur.nodes.find(x=>x.id===nid);if(!n||!n.meta?.columns)return;n.meta.columns[i][f]=v;refreshNode(n);await api.h(`/api/projects/${window._activePid}/boards/${S.cur.id}/nodes/${nid}`,{meta:n.meta})}
 async function rmCol(nid,i){const n=S.cur.nodes.find(x=>x.id===nid);if(!n||!n.meta?.columns)return;n.meta.columns.splice(i,1);await api.h(`/api/projects/${window._activePid}/boards/${S.cur.id}/nodes/${nid}`,{meta:n.meta});refreshNode(n);renderNodeProps(nid)}

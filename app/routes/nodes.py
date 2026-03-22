@@ -31,8 +31,8 @@ def create_node(pid, did):
     x = float(body.get('x', -1))
     y = float(body.get('y', -1))
     
-    # Auto-position if no coordinates provided or explicitly set to -1
-    if x < 0 or y < 0:
+    # Auto-position ONLY if specifically requested with (-1, -1)
+    if x == -1 and y == -1:
         NODE_H_SPACING = 300
         NODE_V_SPACING = 120
         NODES_PER_ROW = 4
@@ -94,3 +94,34 @@ def delete_node(pid, did, nid):
     d.updated_at = datetime.utcnow()
     db.session.commit()
     return ok({'deleted': True, 'id': nid})
+
+
+@nodes_bp.route('/api/projects/<int:pid>/boards/<int:did>/nodes-bulk', methods=['PUT', 'PATCH'])
+def update_nodes_bulk(pid, did):
+    db.get_or_404(Diagram, did)
+    body = request.get_json(silent=True) or {}
+    updates = body.get('updates', [])
+    
+    if not isinstance(updates, list):
+        return err('Updates must be a list')
+
+    updated_nodes = []
+    for item in updates:
+        nid = item.get('id')
+        if not nid: continue
+        n = Node.query.filter_by(id=nid, diagram_id=did).first()
+        if not n: continue
+        
+        for field in ('label', 'node_type'):
+            if field in item:
+                setattr(n, field, item[field])
+        for field in ('x', 'y', 'width', 'height'):
+            if field in item:
+                setattr(n, field, float(item[field]))
+        if 'meta' in item:
+            n.meta = json.dumps(item['meta'])
+        
+        updated_nodes.append(n.to_dict())
+
+    db.session.commit()
+    return ok({'updated': updated_nodes})

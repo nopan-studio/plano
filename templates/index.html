@@ -34,7 +34,11 @@
       <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 1h3v3H1zM7 1h3v3H7zM1 7h3v3H1zM7 7h3v3H7z" stroke="currentColor" stroke-width="1.2"/><path d="M4 2.5h3M4 8.5h3M2.5 4v3M8.5 4v3" stroke="currentColor" stroke-width="1.2"/></svg>
       Layout
     </button>
-    <button class="btn btn-ghost" onclick="fitView()">⊞ Fit</button>
+    <button class="btn btn-ghost" onclick="fitView()" title="Fit all nodes in view">⊞ Fit</button>
+    <button class="btn btn-ghost" id="rect-sel-btn" onclick="toggleSelMode()" title="Rectangle Selection Mode (Shift+Drag)">
+      <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><rect x="1" y="1" width="9" height="9" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2,2"/><path d="M1 1h3M1 1v3M10 1h-3M10 1v3M1 10h3M1 10v-3M10 10h-3M10 10v-3" stroke="currentColor" stroke-width="1.2"/></svg>
+      Select
+    </button>
     <button class="btn btn-accent" onclick="saveDiagram()">
       <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M9 9H2a1 1 0 01-1-1V3L3 1h6a1 1 0 011 1v6a1 1 0 01-1 1z" stroke="currentColor" stroke-width="1.4"/><path d="M3 9V6.5h5V9M6 1v3H4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
       Save
@@ -88,6 +92,7 @@
       <svg id="conn-svg" style="position:absolute;top:0;left:0;width:5000px;height:5000px;pointer-events:none">
         <path id="conn-line" fill="none" stroke="var(--accent)" stroke-width="2" stroke-dasharray="6,4" d="" visibility="hidden"/>
       </svg>
+      <div id="marquee"></div>
     </div>
     <div id="empty-hint">
       <div class="big">◈</div>

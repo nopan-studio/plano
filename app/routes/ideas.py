@@ -22,7 +22,10 @@ def list_ideas():
     project_id = request.args.get('project_id')
     status = request.args.get('status')
     if project_id:
-        q = q.filter_by(project_id=int(project_id))
+        if project_id.lower() == 'null' or project_id == '0':
+            q = q.filter(Idea.project_id.is_(None))
+        else:
+            q = q.filter_by(project_id=int(project_id))
     if status:
         q = q.filter_by(status=status)
     return ok([i.to_dict() for i in q.order_by(Idea.votes.desc(), Idea.created_at.desc()).all()])

@@ -52,8 +52,20 @@ const CAT = {
       {t:'idea',       n:'Idea',          s:'Leaf idea node',    i:'💡', c:'var(--green)',   b:'var(--green-dim)'},
       {t:'resource',   n:'Resource',      s:'Link / reference',  i:'🔗', c:'var(--teal)',    b:'var(--teal-dim)'},
     ]},
+    { cat:'Thinking', col:'var(--blue)', nodes:[
+      {t:'question',   n:'Question',      s:'Unsolved problem',  i:'❓', c:'var(--amber)',   b:'var(--amber-dim)'},
+      {t:'brainstorm', n:'Brainstorm',    s:'Free thinking',     i:'🌀', c:'var(--purple)',  b:'var(--purple-dim)'},
+      {t:'decision',   n:'Decision',      s:'Resolved path',     i:'◇',  c:'var(--green)',   b:'var(--green-dim)'},
+      {t:'pros',       n:'Pro',           s:'Positive point',    i:'👍', c:'var(--green)',   b:'var(--green-dim)'},
+      {t:'cons',       n:'Con',           s:'Negative point',    i:'👎', c:'var(--rose)',    b:'var(--rose-dim)'},
+    ]},
+    { cat:'Structure', col:'var(--text-dim)', nodes:[
+      {t:'topic',      n:'Topic/Group',   s:'Organizational node',i:'📁', c:'var(--text-mid)',b:'var(--surface)'},
+      {t:'action',     n:'Action/Task',   s:'To-be-done item',    i:'✅', c:'var(--blue)',    b:'var(--blue-dim)'},
+      {t:'note',       n:'Text Block',    s:'Plain text node',   i:'¶',  c:'var(--text-dim)',b:'var(--surface)'},
+    ]},
     { cat:'Utils', col:'var(--text-dim)', nodes:[
-      {t:'annotation', n:'Note',          s:'Free-text note',    i:'✎', c:'var(--amber)',   b:'var(--amber-dim)'},
+      {t:'annotation', n:'Sticky Note',   s:'Styled annotation',  i:'✎', c:'var(--amber)',   b:'var(--amber-dim)'},
     ]},
   ],
   function_flow: [
@@ -85,4 +97,4 @@ function getCat() { return CAT[S.cur?.type]||CAT.process_flow }
 function getDef(type) { for(const g of getCat()) { const d=g.nodes.find(x=>x.t===type); if(d) return d } return {t:type,n:type,i:'◈',c:'var(--text-dim)',b:'var(--surface)'} }
 
 // ══ State ════════════════════════════════════════════════════════════════════
-window.S = { diagrams:[], cur:null, selN:null, selE:null, scale:1, ox:0, oy:0, drag:null, conn:null, pan:false, panO:null };
+window.S = { diagrams:[], cur:null, selNs:[], selE:null, scale:1, ox:0, oy:0, drag:null, conn:null, pan:false, panO:null };

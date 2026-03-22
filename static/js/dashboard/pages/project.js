@@ -85,8 +85,14 @@ async function renderProject(pid) {
             <div class="dm-field">
               <label>Progress Completion (%)</label>
               <div style="display:flex;align-items:center;gap:12px">
-                <input type="range" value="${proj.progress_pct||0}" min="0" max="100" style="flex:1;accent-color:var(--accent)" oninput="this.nextElementSibling.value = this.value + '%'" onchange="patchProject(${pid},{progress_pct:+this.value})">
-                <output style="font-family:var(--mono);font-size:13px;width:40px;text-align:right">${proj.progress_pct||0}%</output>
+                <input type="range" value="${proj.progress_pct||0}" min="0" max="100" style="flex:1;accent-color:var(--accent)" 
+                  oninput="this.nextElementSibling.value = this.value; this.parentElement.querySelector('.p-val').value = this.value" 
+                  onchange="patchProject(${pid},{progress_pct:+this.value})">
+                <input type="number" value="${proj.progress_pct||0}" min="0" max="100" class="p-val" 
+                  style="width:50px; background:var(--surface2); border:1px solid var(--border); border-radius:4px; color:var(--text); font-family:var(--mono); font-size:12px; padding:2px 4px; text-align:center"
+                  oninput="this.previousElementSibling.value = this.value"
+                  onchange="patchProject(${pid},{progress_pct:+this.value})">
+                <span style="font-size:12px; color:var(--text-dim)">%</span>
               </div>
             </div>
           </div>
@@ -160,9 +166,15 @@ window.openProjectEditModal = async function(pid) {
           <button class="dm-close" onclick="closeDetailModal()">✕</button>
         </div>
         <div class="dm-body">
-          <div class="dm-section">
-            <label class="dm-section-label">Project Name</label>
-            <input type="text" id="pm-name" value="${esc(p.name)}">
+          <div class="dm-field-row">
+            <div class="dm-field">
+              <label class="dm-section-label">Project Name</label>
+              <input type="text" id="pm-name" value="${esc(p.name)}">
+            </div>
+            <div class="dm-field">
+              <label class="dm-section-label">Progress (%)</label>
+              <input type="number" id="pm-progress" value="${p.progress_pct||0}" min="0" max="100" class="full">
+            </div>
           </div>
           <div class="dm-section">
             <label class="dm-section-label">Description</label>
@@ -180,7 +192,8 @@ window.openProjectEditModal = async function(pid) {
 window.saveProjectDetail = async function(pid) {
   const body = {
     name: document.getElementById('pm-name').value.trim(),
-    description: document.getElementById('pm-desc').value.trim()
+    description: document.getElementById('pm-desc').value.trim(),
+    progress_pct: +document.getElementById('pm-progress').value
   };
   const r = await api('PATCH', `/api/projects/${pid}`, body);
   if (r.error) return toast(r.error, 'err');

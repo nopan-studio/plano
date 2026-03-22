@@ -1,7 +1,7 @@
 // ══ Open / Create ═════════════════════════════════════════════════════════════
 async function openWf(id) {
   S.cur=await api.g(`/api/projects/${window._activePid}/boards/${id}`);
-  S.selN=null; S.selE=null;
+  S.selNs=[]; S.selE=null;
   document.getElementById('wf-name').value=S.cur.name;
   
   // Update document title

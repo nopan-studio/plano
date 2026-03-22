@@ -25,13 +25,22 @@ def list_tasks(pid):
     status = request.args.get('status')
     assignee = request.args.get('assignee')
     milestone_id = request.args.get('milestone_id')
+    include_archived = request.args.get('include_archived', 'false').lower() == 'true'
+    fields = request.args.get('fields', '')
+
     if status:
         q = q.filter_by(status=status)
+    elif not include_archived:
+        # Exclude archived tasks by default when no specific status is requested
+        q = q.filter(Task.status != 'archived')
+
     if assignee:
         q = q.filter_by(assignee=assignee)
     if milestone_id:
         q = q.filter_by(milestone_id=int(milestone_id))
-    return ok([t.to_dict() for t in q.order_by(Task.created_at.desc()).all()])
+    
+    return ok([t.to_dict(fields=fields) for t in q.order_by(Task.created_at.desc()).all()])
+
 
 
 @tasks_bp.route('/api/projects/<int:pid>/tasks', methods=['POST'])

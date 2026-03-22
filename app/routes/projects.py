@@ -133,9 +133,9 @@ def project_dashboard(pid):
     recent_changes = ChangeLog.query.filter_by(project_id=pid)\
         .order_by(ChangeLog.timestamp.desc()).limit(20).all()
 
-    tasks_by_status = {}
-    for t in p.tasks:
-        tasks_by_status[t.status] = tasks_by_status.get(t.status, 0) + 1
+    # Use the summary stats from the model (which handles archived tasks)
+    summary_data = p.to_dict(summary=True)
+    tasks_by_status = summary_data.get('tasks_by_status', {})
 
     milestones_by_status = {}
     for m in p.milestones:
@@ -148,5 +148,6 @@ def project_dashboard(pid):
         'milestones_total': len(p.milestones),
         'milestones_by_status': milestones_by_status,
         'boards_total': len(p.boards),
+        'ideas_total': len(p.ideas),
         'recent_changes': [c.to_dict() for c in recent_changes],
     })

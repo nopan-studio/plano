@@ -101,9 +101,16 @@ def api_docs():
 # ─── UI Routes ────────────────────────────────────────────────────────────────
 
 @api_docs_bp.route('/')
-def root():
-    """Redirect root to dashboard."""
-    return redirect('/dashboard')
+@api_docs_bp.route('/project/<int:pid>')
+def root(pid=None):
+    """Serve the dashboard SPA at the root /."""
+    return render_template('dashboard.html')
+
+@api_docs_bp.route('/dashboard')
+@api_docs_bp.route('/dashboard/<int:pid>')
+def dashboard_redirect(pid=None):
+    """Redirect legacy dashboard routes to root."""
+    return redirect('/')
 
 
 @api_docs_bp.route('/project/<int:pid>/editor')
@@ -117,12 +124,7 @@ def tester():
     return render_template('tester.html')
 
 
-@api_docs_bp.route('/dashboard')
-@api_docs_bp.route('/dashboard/<int:pid>')
-@api_docs_bp.route('/project/<int:pid>')
-def dashboard(pid=None):
-    """Serve the dashboard SPA for any project-or-global route."""
-    return render_template('dashboard.html')
+# Removed /dashboard routes (now handled by root)
 
 
 # ─── Health Check ─────────────────────────────────────────────────────────────

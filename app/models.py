@@ -52,6 +52,7 @@ class Project(db.Model):
     boards = db.relationship('Diagram', backref='project', lazy=True, cascade='all, delete-orphan')
     changelogs = db.relationship('ChangeLog', backref='project', lazy=True, cascade='all, delete-orphan')
     updates = db.relationship('Update', backref='project', lazy=True, cascade='all, delete-orphan')
+    ideas = db.relationship('Idea', backref='project', lazy=True, cascade='all, delete-orphan')
 
     def to_dict(self, summary=False):
         d = dict(
@@ -67,11 +68,19 @@ class Project(db.Model):
             d['task_count'] = len(self.tasks)
             d['milestone_count'] = len(self.milestones)
             d['board_count'] = len(self.boards)
-            # Task breakdown
+            # Task breakdown (including archived tasks in their original buckets)
             d['tasks_by_status'] = {}
             for t in self.tasks:
-                d['tasks_by_status'][t.status] = d['tasks_by_status'].get(t.status, 0) + 1
-        return d
+                status = t.status
+                if status == 'archived':
+                    try:
+                        m = json.loads(t.meta or '{}')
+                        # If it has an original status (like 'done'), count it there
+                        status = m.get('original_status', 'archived')
+                    except:
+                        pass
+                d['tasks_by_status'][status] = d['tasks_by_status'].get(status, 0) + 1
+            return d
 
 
 # ─── Milestone ────────────────────────────────────────────────────────────────

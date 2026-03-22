@@ -23,13 +23,14 @@ def main():
     print(f'  Plano PM running on http://{args.host}:{args.port}')
     print(f'  Health check: http://{args.host}:{args.port}/health')
     print(f'  API docs:     http://{args.host}:{args.port}/api')
-    print(f'  Dashboard:    http://{args.host}:{args.port}/dashboard')
+    print(f'  Dashboard:    http://{args.host}:{args.port}/')
     print('  Press Ctrl+C to stop.\n')
 
     application.run(
         host=args.host,
         port=args.port,
-        debug=args.debug,
+       #debug=args.debug,
+        debug=True,
         use_reloader=False,
         threaded=True,
     )

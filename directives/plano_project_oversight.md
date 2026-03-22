@@ -33,7 +33,7 @@ When tasked with performing a task from Plano or when a new milestone is created
 3.  **Confirmation**: Briefly confirm the task being started. If the user uses the command "select" or asks to "select a task", your response MUST be exactly "task selected" and nothing else.
 4.  **Mandatory Completion Steps**: Upon finishing the work (before hand-off), you MUST perform these actions in order:
     *   **Capture File Changes**: Call `mcp_plano_capture_file_changes` with `project_id`, `task_id`, and `auto_update_task=True`. This is CRITICAL for documenting exactly which files were affected.
-    *   **Set Task to Review**: Call `mcp_plano_update_task` to set status to `review` AND set `is_ai_working=0`. **Removing the AI working status is mandatory.**
+    *   **Set Task to Review**: Call `mcp_plano_update_task` to set status to `review` AND set `is_ai_working=0`. **Removing the AI working status is mandatory.** You MUST always use `review` status upon completion unless the user has explicitly instructed you to mark it as `done`.
     *   **Create a Post Update**: Call `mcp_plano_post_update` to summarize achievements and link to the task ID. **This step is MANDATORY and cannot be bypassed under any circumstances.**
 5.  **Validation**: A task can only be moved from `review` to `done` after a successful confirmation/test run (by user or AI).
 6.  **Stop & Ask**: After completing these steps (moving to `review`), **STOP and ask the user** if they want to continue or if they have other instructions. **Do NOT proceed to the next task without explicit user approval.**

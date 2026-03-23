@@ -11,9 +11,9 @@ import { addRealtimeHandler } from '$lib/realtime.svelte';
 
   const pid = $derived(page.params.id);
 
-  async function fetchData() {
+  async function fetchData(silent = false) {
     if (!pid) return;
-    loading = true;
+    if (!silent) loading = true;
     try {
       const [p, s, m] = await Promise.all([
         fetch(`/api/projects/${pid}`).then(r => r.json()),
@@ -26,7 +26,7 @@ import { addRealtimeHandler } from '$lib/realtime.svelte';
     } catch (e) {
       console.error(e);
     } finally {
-      loading = false;
+      if (!silent) loading = false;
     }
   }
 
@@ -39,7 +39,7 @@ import { addRealtimeHandler } from '$lib/realtime.svelte';
       // Refresh dashboard on any system change or task/milestone update for this project
       if (event.type === 'system_change' || event.type === 'project_updated' || 
           event.type?.includes('task_') || event.type?.includes('milestone_')) {
-        fetchData();
+        fetchData(true);
       }
     });
   });
@@ -50,7 +50,8 @@ import { addRealtimeHandler } from '$lib/realtime.svelte';
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
-    await fetchData();
+    // Silent reload after patching to avoid jarring loading screen
+    await fetchData(true);
   }
 
   async function deleteProject() {

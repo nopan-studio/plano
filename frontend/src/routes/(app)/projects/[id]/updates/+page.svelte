@@ -13,9 +13,9 @@ import { addRealtimeHandler } from '$lib/realtime.svelte';
 
   const pid = $derived(page.params.id);
 
-  async function fetchData() {
+  async function fetchData(silent = false) {
     if (!pid) return;
-    loading = true;
+    if (!silent) loading = true;
     try {
       const [p, u, t] = await Promise.all([
         fetch(`/api/projects/${pid}`).then(r => r.json()),
@@ -28,7 +28,7 @@ import { addRealtimeHandler } from '$lib/realtime.svelte';
     } catch (e) {
       console.error(e);
     } finally {
-      loading = false;
+      if (!silent) loading = false;
     }
   }
 
@@ -39,7 +39,7 @@ import { addRealtimeHandler } from '$lib/realtime.svelte';
   onMount(() => {
     return addRealtimeHandler((event) => {
       if (event.type?.startsWith('update_') || event.type?.startsWith('task_')) {
-        fetchData();
+        fetchData(true);
       }
     });
   });
@@ -53,7 +53,7 @@ import { addRealtimeHandler } from '$lib/realtime.svelte';
   async function deleteUpdate(uid) {
     if(!confirm('Delete this update?')) return;
     await fetch(`/api/projects/${pid}/updates/${uid}`, { method: 'DELETE' });
-    await fetchData();
+    await fetchData(true);
   }
 </script>
 

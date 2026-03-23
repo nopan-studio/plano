@@ -20,16 +20,16 @@
 
   const pid = $derived(page.params.id);
 
-  async function fetchData() {
+  async function fetchData(silent = false) {
     if (!pid) return;
-    loading = true;
+    if (!silent) loading = true;
     try {
       const resp = await fetch(`/api/ideas?project_id=${pid}`);
       ideas = await resp.json();
     } catch (e) {
       console.error(e);
     } finally {
-      loading = false;
+      if (!silent) loading = false;
     }
   }
 
@@ -50,7 +50,7 @@
 
   async function voteIdea(iid) {
     await fetch(`/api/ideas/${iid}/vote`, { method: 'POST' });
-    fetchData();
+    fetchData(true);
   }
 
   async function saveIdeaDetail() {

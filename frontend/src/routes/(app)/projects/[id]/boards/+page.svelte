@@ -11,17 +11,17 @@
 
   const pid = $derived(page.params.id);
 
-  async function fetchData() {
+  async function fetchData(silent = false) {
     if (!pid) return;
-    loading = true;
+    if (!silent) loading = true;
     try {
       const resp = await fetch(`/api/projects/${pid}/boards`);
       boards = await resp.json();
     } catch (e) {
       console.error(e);
-      toast.err('Failed to fetch boards');
+      if (!silent) toast.err('Failed to fetch boards');
     } finally {
-      loading = false;
+      if (!silent) loading = false;
     }
   }
 
@@ -50,7 +50,7 @@
       toast.ok('Board created');
       showForm = false;
       newBoardName = '';
-      fetchData();
+      fetchData(true);
     } catch (e) {
       toast.err('Failed to create board');
     }
@@ -67,7 +67,7 @@
       if (r.error) return toast.err(r.error);
       toast.ok('Board created from template');
       showForm = false;
-      fetchData();
+      fetchData(true);
     } catch (e) {
       toast.err('Failed to create board from template');
     }
@@ -78,7 +78,7 @@
     try {
       await fetch(`/api/projects/${pid}/boards/${did}`, { method: 'DELETE' });
       toast.ok('Deleted');
-      fetchData();
+      fetchData(true);
     } catch (e) {
       toast.err('Failed to delete board');
     }

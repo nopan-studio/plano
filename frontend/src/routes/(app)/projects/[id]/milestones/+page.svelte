@@ -11,9 +11,9 @@ import { addRealtimeHandler } from '$lib/realtime.svelte';
 
   const pid = $derived(page.params.id);
 
-  async function fetchData() {
+  async function fetchData(silent = false) {
     if (!pid) return;
-    loading = true;
+    if (!silent) loading = true;
     try {
       const [p, m] = await Promise.all([
         fetch(`/api/projects/${pid}`).then(r => r.json()),
@@ -24,7 +24,7 @@ import { addRealtimeHandler } from '$lib/realtime.svelte';
     } catch (e) {
       console.error(e);
     } finally {
-      loading = false;
+      if (!silent) loading = false;
     }
   }
 
@@ -35,7 +35,7 @@ import { addRealtimeHandler } from '$lib/realtime.svelte';
   onMount(() => {
     return addRealtimeHandler((event) => {
       if (event.type?.startsWith('milestone_')) {
-        fetchData();
+        fetchData(true);
       }
     });
   });
@@ -54,7 +54,7 @@ import { addRealtimeHandler } from '$lib/realtime.svelte';
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(selectedMilestone)
     });
-    await fetchData();
+    await fetchData(true);
     selectedMilestone = null;
   }
 </script>

@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { esc, md } from '$lib/utils';
+import { addRealtimeHandler } from '$lib/realtime.svelte';
 
   let ideas = $state([]);
   let loading = $state(true);
@@ -45,7 +46,14 @@
     fetchIdeas();
   });
 
-  onMount(fetchData);
+  onMount(() => {
+    fetchData();
+    return addRealtimeHandler((event) => {
+      if (event.type?.startsWith('idea_')) {
+        fetchIdeas(); // Just refresh the ideas list
+      }
+    });
+  });
 
   function openIdeaDetail(idea) {
     selectedIdea = { ...idea };

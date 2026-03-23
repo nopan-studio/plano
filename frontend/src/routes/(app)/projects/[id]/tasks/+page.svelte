@@ -19,6 +19,7 @@
   let dropIndex = $state(-1);
   let dropTargetId = $state(null);
   let dropStatus = $state(null);
+  let droppedTaskId = $state(null);
   let showForm = $state(false);
   let newTask = $state({ title: '', assignee: '', status: 'todo', priority: 'medium', milestone_id: null, due_date: '', description: '' });
 
@@ -356,6 +357,12 @@
     const finalizeDrop = () => {
       saveKanbanOrder(order);
 
+      const tid = draggingTask.id;
+      droppedTaskId = tid;
+      setTimeout(() => {
+        if (droppedTaskId === tid) droppedTaskId = null;
+      }, 1000);
+
       draggingTask = null;
       draggingTaskId = null;
       draggingTaskHeight = 0;
@@ -369,11 +376,7 @@
       tasks = [...tasks];
     };
 
-    if (document.startViewTransition) {
-      document.startViewTransition(finalizeDrop);
-    } else {
-      finalizeDrop();
-    }
+    finalizeDrop();
   }
 
   // PANNING logic
@@ -464,6 +467,7 @@
       {dropTargetId}
       {draggingTaskId}
       {draggingTaskHeight}
+      {droppedTaskId}
       ontaskclick={t => selectedTask = { ...t }}
       onaddtask={toggleForm}
       onarchiveall={archiveAllDone}

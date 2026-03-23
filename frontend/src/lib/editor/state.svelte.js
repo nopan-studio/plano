@@ -51,6 +51,9 @@ export class EditorState {
             if (event.type === 'system_change' && event.data.path?.includes(`/boards/${this.did}`)) {
                 this.load();
                 if (event.data.tool) toast.ok(`AI (${event.data.tool}) updated board`);
+            } else if (event.type === 'board_updated' && event.data.id === this.did) {
+                this.load();
+                toast.ok("Board synchronized");
             }
         });
 

@@ -168,7 +168,7 @@ textarea{resize:vertical;min-height:70px}
 .empty p{font-size:13px;max-width:340px;margin:0 auto}
 
 /* toast */
-#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(4px);background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);padding:7px 14px;font-size:13px;z-index:999;opacity:0;transition:.18s;pointer-events:none}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(4px);background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);padding:7px 14px;font-size:13px;z-index:3000000;opacity:0;transition:.18s;pointer-events:none}
 #toast.show{opacity:1;transform:translateX(-50%)}
 #toast.ok{border-color:var(--green);color:var(--green)}
 #toast.err{border-color:var(--rose);color:var(--rose)}
@@ -386,7 +386,7 @@ textarea{resize:vertical;min-height:70px}
 @keyframes ai-blink { from { opacity: 0.2; transform: scale(0.8); } to { opacity: 1; transform: scale(1.1); } }
 
 /* ── Detail Modal (Trello-style) ── */
-.detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:flex;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto}
+.detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:2000000;display:flex;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto}
 .detail-modal{background:var(--panel);border:1px solid var(--border);border-radius:16px;width:100%;max-width:640px;box-shadow:0 24px 48px rgba(0,0,0,.9);animation:modalIn .18s ease}
 @keyframes modalIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 .dm-header{display:flex;align-items:flex-start;gap:12px;padding:20px 24px 14px;border-bottom:1px solid var(--border)}
@@ -419,52 +419,7 @@ textarea{resize:vertical;min-height:70px}
 .fa-deleted{background:var(--rose-dim);color:var(--rose)}
 .file-path{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-mid)}
 .file-diff-view{border-top-left-radius:0;border-top-right-radius:0;border-top:none;margin-bottom:8px}
-/* ── MCP Indicator ── */
-#mcp-status-container {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  z-index: 1000;
-  pointer-events: none;
-}
-.mcp-indicator {
-  background: var(--panel);
-  border: 1px solid var(--accent);
-  border-radius: var(--r);
-  padding: 10px 14px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  box-shadow: 0 8px 24px rgba(0,0,0,.6);
-  animation: slideIn .3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
-  pointer-events: auto;
-  min-width: 240px;
-}
-@keyframes slideIn {
-  from { transform: translateX(100%) scale(0.9); opacity: 0; }
-  to { transform: translateX(0) scale(1); opacity: 1; }
-}
-.mcp-indicator .icon {
-  width: 32px;
-  height: 32px;
-  background: var(--accent-dim);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--accent);
-}
-.mcp-indicator .body { flex: 1; }
-.mcp-indicator .title { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-mid); letter-spacing: .05em; }
-.mcp-indicator .tool { font-size: 13px; font-weight: 600; color: var(--text); }
-.mcp-indicator .dots { display: flex; gap: 3px; }
-.mcp-indicator .dots span { width: 4px; height: 4px; background: var(--accent); border-radius: 50%; animation: dotBlink 1.4s infinite; }
-.mcp-indicator .dots span:nth-child(2) { animation-delay: .2s; }
-.mcp-indicator .dots span:nth-child(3) { animation-delay: .4s; }
-@keyframes dotBlink { 0%, 100% { opacity: .3; } 50% { opacity: 1; } }
+/* AI Status container managed in AIIndicator.svelte */
 
 /* ── View Transitions Stacking ── */
 ::view-transition-group(topbar) {

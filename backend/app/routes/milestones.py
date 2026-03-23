@@ -4,6 +4,7 @@ from datetime import datetime
 from app import db
 from app.models import Milestone, Project, MILESTONE_STATUSES
 from app.changelog import log_change, log_field_changes
+from app.events import event_bus
 
 milestones_bp = Blueprint('milestones', __name__)
 
@@ -54,6 +55,7 @@ def create_milestone(pid):
     db.session.flush()
     log_change(pid, 'milestone', m.id, 'created')
     db.session.commit()
+    event_bus.broadcast('milestone_created', m.to_dict())
     return ok(m.to_dict(), 201)
 
 
@@ -92,6 +94,7 @@ def update_milestone(pid, mid):
     new = m.to_dict()
     log_field_changes(pid, 'milestone', m.id, old, new)
     db.session.commit()
+    event_bus.broadcast('milestone_updated', m.to_dict())
     return ok(m.to_dict())
 
 
@@ -102,4 +105,5 @@ def delete_milestone(pid, mid):
     log_change(pid, 'milestone', mid, 'deleted')
     db.session.delete(m)
     db.session.commit()
+    event_bus.broadcast('milestone_deleted', {'id': mid, 'project_id': pid})
     return ok({'deleted': True, 'id': mid})

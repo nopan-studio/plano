@@ -216,6 +216,7 @@ class Idea(db.Model):
     status = db.Column(db.String(32), default='new')
     votes = db.Column(db.Integer, default=0)
     milestone_id = db.Column(db.Integer, db.ForeignKey('milestone.id'), nullable=True)
+    tags = db.Column(db.Text, default='[]')  # JSON array
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

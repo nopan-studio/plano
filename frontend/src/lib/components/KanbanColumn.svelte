@@ -1,10 +1,9 @@
 <script>
-  import { flip } from 'svelte/animate';
-  import { cubicOut } from 'svelte/easing';
   import KanbanCard from './KanbanCard.svelte';
   let { 
     col, tasks = [], milestones = [], 
     dropIndex = -1, dropStatus = null, dropTargetId = null, draggingTaskId = null, draggingTaskHeight = 0,
+    droppedTaskId = null,
     ontaskdrop, ondragover, ontaskclick, onaddtask, onarchiveall, 
     handleDragStart, handleDragEnd
   } = $props();
@@ -32,13 +31,14 @@
     ondrop={e => ontaskdrop(e, col.id)}
   >
     {#each tasks as task, i (task.id)}
-      <div animate:flip={{ duration: 150, easing: cubicOut }}>
+      <div>
         <KanbanCard 
           {task} 
           {milestones}
           isDragging={task.id === draggingTaskId}
           isDropTarget={dropStatus === col.id && String(dropTargetId) === String(task.id) && task.id !== draggingTaskId}
           isLastDropTarget={dropStatus === col.id && dropTargetId === 'bottom' && i === tasks.length - 1 && task.id !== draggingTaskId}
+          isDropped={String(task.id) === String(droppedTaskId)}
           {dropStatus}
           ondragstart={e => handleDragStart(e, task)} 
           ondragend={handleDragEnd}

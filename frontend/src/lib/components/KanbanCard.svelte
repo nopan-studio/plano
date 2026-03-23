@@ -3,6 +3,7 @@
   let { 
     task, milestones = [], isDragging = false, dropStatus = null,
     isDropTarget = false, isLastDropTarget = false,
+    isDropped = false,
     ondragstart, ondragend, onclick 
   } = $props();
   
@@ -26,6 +27,7 @@
   class:projecting={isDragging && dropStatus !== null}
   class:drop-target={isDropTarget}
   class:last-drop-target={isLastDropTarget}
+  class:dropped={isDropped}
   {ondragstart}
   {ondragend}
   {onclick}
@@ -251,5 +253,24 @@
     0%   { box-shadow: 0 0 4px var(--accent-dim); }
     50%  { box-shadow: 0 0 15px var(--accent-glow); }
     100% { box-shadow: 0 0 4px var(--accent-dim); }
+  }
+
+  .dropped {
+    animation: drop-highlight 1s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+    z-index: 20;
+  }
+  @keyframes drop-highlight {
+    0% { 
+      background: var(--accent-dim); 
+      border-color: var(--accent); 
+      box-shadow: 0 0 30px var(--accent-glow);
+      transform: scale(1.02);
+    }
+    100% { 
+      background: var(--surface); 
+      border-color: var(--border);
+      box-shadow: none;
+      transform: scale(1);
+    }
   }
 </style>

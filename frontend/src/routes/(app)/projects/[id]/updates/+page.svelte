@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { page } from '$app/state';
   import { md, esc, timeAgo } from '$lib/utils';
+import { addRealtimeHandler } from '$lib/realtime.svelte';
 
   let project = $state({});
   let updates = $state([]);
@@ -33,6 +34,14 @@
 
   $effect(() => {
     if (pid) fetchData();
+  });
+
+  onMount(() => {
+    return addRealtimeHandler((event) => {
+      if (event.type?.startsWith('update_') || event.type?.startsWith('task_')) {
+        fetchData();
+      }
+    });
   });
 
   const filteredUpdates = $derived(updates.filter(u => filter === 'all' || u.update_type === filter));

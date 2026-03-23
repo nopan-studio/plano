@@ -22,7 +22,7 @@
     bottom: 24px;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 1000;
+    z-index: 3000000;
     display: flex;
     flex-direction: column;
     gap: 8px;

@@ -117,6 +117,7 @@ def update_project(pid):
     db.session.commit()
     
     from app.events import event_bus
+    event_bus.broadcast('project_updated', p.to_dict(summary=True))
     event_bus.broadcast('kanban_order_updated', {
         'project_id': p.id,
         'kanban_order': new.get('kanban_order', {})

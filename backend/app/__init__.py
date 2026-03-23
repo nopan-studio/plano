@@ -47,6 +47,16 @@ def create_app(config_class=None):
                 'path': request.path,
                 'tool': tool_name
             })
+        
+    @app.after_request
+    def log_mcp_finish(response):
+        tool_name = request.headers.get('X-Plano-Tool')
+        if tool_name:
+            event_bus.broadcast('mcp_tool_finish', {
+                'tool': tool_name,
+                'status': response.status_code
+            })
+        return response
 
     # JSON error handlers
     @app.errorhandler(404)

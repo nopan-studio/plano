@@ -4,6 +4,7 @@
   import Sidebar from "../../lib/components/Sidebar.svelte";
   import Header from "../../lib/components/Header.svelte";
   import Toast from "../../lib/components/Toast.svelte";
+  import AIIndicator from "../../lib/components/AIIndicator.svelte";
   import { onMount } from 'svelte';
   import { initRealtime } from '$lib/realtime.svelte';
 
@@ -28,6 +29,7 @@
     <main class="main">
       {@render children()}
       <Toast />
+      <AIIndicator />
     </main>
   </div>
 </div>

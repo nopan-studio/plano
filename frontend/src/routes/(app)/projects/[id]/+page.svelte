@@ -2,6 +2,7 @@
   import { onMount, tick } from 'svelte';
   import { page } from '$app/state';
   import { md, esc, fmtDate, timeAgo } from '$lib/utils';
+import { addRealtimeHandler } from '$lib/realtime.svelte';
 
   let project = $state({});
   let stats = $state({});
@@ -31,6 +32,16 @@
 
   $effect(() => {
     if (pid) fetchData();
+  });
+
+  onMount(() => {
+    return addRealtimeHandler((event) => {
+      // Refresh dashboard on any system change or task/milestone update for this project
+      if (event.type === 'system_change' || event.type === 'project_updated' || 
+          event.type?.includes('task_') || event.type?.includes('milestone_')) {
+        fetchData();
+      }
+    });
   });
 
   async function patchProject(data) {

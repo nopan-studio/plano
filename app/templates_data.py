@@ -1,4 +1,4 @@
-"""Pre-built board templates for common PM flows (Phase 5)."""
+"""Pre-built board templates for common PM flows."""
 
 TEMPLATES = {
     'sprint_planning': {

@@ -122,9 +122,11 @@ declare module '$env/static/private' {
 	export const npm_lifecycle_event: string;
 	export const SHLVL: string;
 	export const MOZ_ENABLE_WAYLAND: string;
+	export const PAGER: string;
 	export const QT_IM_MODULE: string;
 	export const XDG_VTNR: string;
 	export const XDG_SESSION_ID: string;
+	export const ANTIGRAVITY_AGENT: string;
 	export const MANAGERPIDFDID: string;
 	export const npm_config_user_agent: string;
 	export const XDG_STATE_HOME: string;
@@ -324,9 +326,11 @@ declare module '$env/dynamic/private' {
 		npm_lifecycle_event: string;
 		SHLVL: string;
 		MOZ_ENABLE_WAYLAND: string;
+		PAGER: string;
 		QT_IM_MODULE: string;
 		XDG_VTNR: string;
 		XDG_SESSION_ID: string;
+		ANTIGRAVITY_AGENT: string;
 		MANAGERPIDFDID: string;
 		npm_config_user_agent: string;
 		XDG_STATE_HOME: string;

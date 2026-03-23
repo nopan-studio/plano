@@ -166,8 +166,7 @@ def duplicate_diagram(pid, did):
     return ok(d.to_dict(full=True), 201)
 
 
-# ─── Phase 2: Schema Import ──────────────────────────────────────────────────
-
+# ─── Schema Import ────────────────────────────────────────────────────────────
 @boards_bp.route('/api/projects/<int:pid>/boards/<int:did>/import-schema', methods=['POST'])
 def import_schema(pid, did):
     """Import a JSON schema definition and auto-create nodes + edges."""
@@ -214,8 +213,7 @@ def import_schema(pid, did):
     return ok(d.to_dict(full=True), 201)
 
 
-# ─── Phase 2: Relation Validation ────────────────────────────────────────────
-
+# ─── Relation Validation ──────────────────────────────────────────────────────
 def validate_edge_type(diagram, edge_type):
     """Check if edge_type is valid for the diagram's type."""
     valid_types = EDGE_TYPES.get(diagram.type, [])
@@ -224,8 +222,7 @@ def validate_edge_type(diagram, edge_type):
     return edge_type in valid_types or edge_type == 'default'
 
 
-# ─── Phase 5: Template-based board creation ──────────────────────────────────
-
+# ─── Template-based board creation ───────────────────────────────────────────
 @boards_bp.route('/api/projects/<int:pid>/boards/from-template', methods=['POST'])
 def create_from_template(pid):
     """Create a board from a pre-built template."""

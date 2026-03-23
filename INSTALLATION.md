@@ -10,9 +10,12 @@ Copy the following command block and execute it in your terminal. This will dete
 ```bash
 # Detected OS: Linux/macOS
 python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt && ./start.sh
+
+# Setup Frontend (In second terminal)
+cd frontend && npm install && npm run dev
 ```
 
-*(If on Windows, use: `python -m venv venv && .\venv\Scripts\activate && pip install -r requirements.txt && python run.py`)*
+*(If on Windows, use: `python -m venv venv && .\venv\Scripts\activate && pip install -r requirements.txt && python run.py` then `cd frontend && npm install && npm run dev`)*
 
 ---
 
@@ -46,7 +49,8 @@ If you support **MCP (Model Context Protocol)**, you can manage this project's t
 
 ## 🚀 Step 4: Verification
 After installation, open the dashboard to ensure everything is running:
-- **Local Dashboard**: [http://localhost:5000](http://localhost:5000)
+- **Local Dashboard**: [http://localhost:5173](http://localhost:5173) (SvelteKit)
+- **API Health**: [http://localhost:5000/health](http://localhost:5000/health)
 
 **AI Verification Prompt**:
 > "Tell me about the current status of the Plano project and list the 3 most recent updates."

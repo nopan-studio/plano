@@ -26,10 +26,10 @@ The **Plano MCP Server** and the **Flask Backend** perform the deterministic wor
 ---
 
 ### Tech Stack
--   **Backend**: Python / Flask.
+-   **Backend**: Python / Flask (REST API).
 -   **Database**: SQLite with SQLAlchemy ORM.
 -   **Real-time Engine**: Server-Sent Events (SSE) for live UI updates and AI activity tracking.
--   **Frontend**: Vanilla JavaScript and CSS (High-fidelity design, no heavy frameworks).
+-   **Frontend**: Modern SvelteKit, Svelte 5 (High-fidelity design, reactive state management).
 -   **Integration**: Native Model Context Protocol (MCP) server for deep AI assistant integration.
 
 ## 3. Data Models
@@ -61,13 +61,14 @@ Entire projects can be exported to a single JSON blob and imported elsewhere. Th
 
 ## 5. Directory Structure
 
--   `/app`: Core application logic.
-    -   `/routes`: API and UI endpoints (Boards, Tasks, Projects, etc.).
+-   `/app`: Core backend application logic (Flask).
+    -   `/routes`: API endpoints (Boards, Tasks, Projects, etc.).
     -   `models.py`: Database schema definitions.
-    -   `templates_data.py`: Pre-configured project templates (Sprint, Release, Bug Triage).
+    -   `templates_data.py`: Pre-configured project templates.
+-   `/frontend`: Modern SvelteKit project (High-fidelity UI).
+    -   `/src`: Svelte components and reactive logic.
 -   `/directives`: Markdown SOPs for AI agents.
--   `/static`: Frontend assets (CSS and client-side JS).
--   `/templates`: HTML templates for the dashboard and visual boards.
+-   `/static`: Global static assets (Images, shared media).
 -   `mcp_server.py`: The entry point for the MCP server, providing the tool interface for AI agents.
 -   `run.py`: Entry point for starting the web server.
 

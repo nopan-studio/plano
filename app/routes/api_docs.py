@@ -98,32 +98,35 @@ def api_docs():
     return ok(docs)
 
 
-# ─── UI Routes ────────────────────────────────────────────────────────────────
+# ─── UI Routes (Legacy Redirects) ─────────────────────────────────────────────
 
 @api_docs_bp.route('/')
 @api_docs_bp.route('/projects/<int:pid>')
 @api_docs_bp.route('/projects/<int:pid>/<path:path>')
 @api_docs_bp.route('/ideas')
-@api_docs_bp.route('/project/<int:pid>') # Legacy compatibility
+@api_docs_bp.route('/project/<int:pid>') 
 def root(pid=None, path=None):
-    """Serve the dashboard SPA for all frontend routes."""
-    # If the path contains 'editor', we might want to serve index.html (the old editor)
-    # But since we ported it to Svelte, we should serve the Svelte entry point.
-    # Assuming dashboard.html is the Svelte entry point now.
-    return render_template('dashboard.html')
+    """Inform about the new SvelteKit frontend."""
+    return ok({
+        "status": "Plano PM API is running",
+        "frontend": "SvelteKit (typically on port 5173 for development or built in static/ folder)",
+        "api_docs": "/api",
+        "health": "/health"
+    })
 
 @api_docs_bp.route('/project/<int:pid>/editor')
 @api_docs_bp.route('/project/<int:pid>/editor/<int:did>')
 def legacy_editor(pid, did=None):
-    return render_template('index.html')
-
+    """Old editor route redirect (placeholder)."""
+    return jsonify({
+        "error": "Legacy editor is removed",
+        "message": f"Use the new SvelteKit editor at /projects/{pid}/editor/{did if did else ''}"
+    }), 410
 
 @api_docs_bp.route('/tester')
 def tester():
-    return render_template('tester.html')
-
-
-# Removed /dashboard routes (now handled by root)
+    """Old tester route removed."""
+    return jsonify({"error": "Legacy tester is removed"}), 410
 
 
 # ─── Health Check ─────────────────────────────────────────────────────────────

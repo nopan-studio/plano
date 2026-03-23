@@ -9,13 +9,13 @@ Copy the following command block and execute it in your terminal. This will dete
 
 ```bash
 # Detected OS: Linux/macOS
-python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt && ./start.sh
+python3 -m venv venv && source venv/bin/activate && pip install -r backend/requirements.txt && ./start.sh
 
 # Setup Frontend (In second terminal)
 cd frontend && npm install && npm run dev
 ```
 
-*(If on Windows, use: `python -m venv venv && .\venv\Scripts\activate && pip install -r requirements.txt && python run.py` then `cd frontend && npm install && npm run dev`)*
+*(If on Windows, use: `python -m venv venv && .\venv\Scripts\activate && pip install -r backend/requirements.txt && cd backend && python run.py` then `cd ../frontend && npm install && npm run dev`)*
 
 ---
 
@@ -39,11 +39,11 @@ Plano is built with a **3-Layer Architecture** (Directives, Orchestration, Execu
 If you support **MCP (Model Context Protocol)**, you can manage this project's tasks, milestones, and diagrams directly.
 
 **Installation Prompt**:
-> Use the `mcp_server.py` file in this directory to install the Plano MCP tool.
+> Use the `backend/mcp_server.py` file in this directory to install the Plano MCP tool.
 
 **Manual Config paths**:
 - **Executable**: `{{PROJECT_DIR}}/venv/bin/python` (Unix) or `{{PROJECT_DIR}}/venv/Scripts/python.exe` (Windows)
-- **Script**: `{{PROJECT_DIR}}/mcp_server.py`
+- **Script**: `{{PROJECT_DIR}}/backend/mcp_server.py`
 
 ---
 

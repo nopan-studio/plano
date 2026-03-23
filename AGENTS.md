@@ -30,5 +30,5 @@ This project follows an agent-friendly architecture that separates concerns betw
 
 ## Directory Structure
 - `directives/` - Agent SOPs and tactical instructions.
-- `app/` - Core Plano application logic.
-- `mcp_server.py` - The MCP server interface for AI agents.
+- `backend/app/` - Core Plano application logic.
+- `backend/mcp_server.py` - The MCP server interface for AI agents.

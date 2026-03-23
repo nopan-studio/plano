@@ -16,15 +16,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install
-COPY requirements.txt .
+COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy backend code
-COPY app/ ./app/
-COPY config.py .
-COPY run.py .
-COPY mcp_server.py .
-COPY static/ ./static/
+COPY backend/ ./
+# static is now in backend/static, so it's copied by the line above
 
 # Copy built frontend from Stage 1
 # This assumes the build output is in frontend/build or similar

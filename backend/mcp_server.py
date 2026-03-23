@@ -62,13 +62,23 @@ def _ensure_server():
         return
 
     if os.name == "nt":  # Windows
+        # Check both backend/venv and root/venv
         venv_python = PROJECT_DIR / "venv" / "Scripts" / "python.exe"
         if not venv_python.exists():
+            venv_python = PROJECT_DIR.parent / "venv" / "Scripts" / "python.exe"
+        if not venv_python.exists():
             venv_python = PROJECT_DIR / ".venv" / "Scripts" / "python.exe"
+        if not venv_python.exists():
+            venv_python = PROJECT_DIR.parent / ".venv" / "Scripts" / "python.exe"
     else:  # Unix (Linux/macOS)
+        # Check both backend/venv and root/venv
         venv_python = PROJECT_DIR / "venv" / "bin" / "python"
         if not venv_python.exists():
+            venv_python = PROJECT_DIR.parent / "venv" / "bin" / "python"
+        if not venv_python.exists():
             venv_python = PROJECT_DIR / ".venv" / "bin" / "python"
+        if not venv_python.exists():
+            venv_python = PROJECT_DIR.parent / ".venv" / "bin" / "python"
 
     if not venv_python.exists():
         venv_python = Path(sys.executable)

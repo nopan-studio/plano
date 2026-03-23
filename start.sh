@@ -64,7 +64,7 @@ fi
 # ── Check dependencies ─────────────────────────────────────────────────────────
 python -c "import flask, flask_sqlalchemy, flask_cors" 2>/dev/null || {
   echo "Installing dependencies..."
-  pip install -r requirements.txt -q
+  pip install -r backend/requirements.txt -q
 }
 
 # ── Clear port if occupied ─────────────────────────────────────────────────────
@@ -95,11 +95,13 @@ echo "  │  API docs   →  /api                     │"
 echo "  └─────────────────────────────────────────┘"
 echo ""
 
+cd backend
+
 if $BG; then
   nohup python run.py --port "$PORT" > plano.log 2>&1 &
   echo $! > "$PID_FILE"
   BG_PID=$(cat "$PID_FILE")
-  echo "Started in background (pid $BG_PID) — logs in plano.log"
+  echo "Started in background (pid $BG_PID) — logs in backend/plano.log"
   echo "Stop with: ./start.sh --stop"
 
   # Wait for server to become healthy
@@ -114,7 +116,7 @@ if $BG; then
     echo -n "."
     if [[ $i -eq 20 ]]; then
       echo ""
-      echo "✗ Server didn't respond after 10s — check plano.log"
+      echo "✗ Server didn't respond after 10s — check backend/plano.log"
       exit 1
     fi
   done

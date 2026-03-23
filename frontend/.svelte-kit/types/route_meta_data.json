@@ -1,15 +1,17 @@
 {
+	"/(editor)": [],
+	"/(app)": [],
 	"/": [],
-	"/ideas": [],
-	"/projects/[id]": [],
-	"/projects/[id]/archive": [],
-	"/projects/[id]/boards": [],
-	"/projects/[id]/editor/[did]": [
-		"src/routes/projects/[id]/editor/[did]/+page.js"
+	"/(app)/ideas": [],
+	"/(app)/projects/[id]": [],
+	"/(app)/projects/[id]/archive": [],
+	"/(app)/projects/[id]/boards": [],
+	"/(editor)/projects/[id]/editor/[did]": [
+		"src/routes/(editor)/projects/[id]/editor/[did]/+page.js"
 	],
-	"/projects/[id]/ideas": [],
-	"/projects/[id]/milestones": [],
-	"/projects/[id]/project-logs": [],
-	"/projects/[id]/tasks": [],
-	"/projects/[id]/updates": []
+	"/(app)/projects/[id]/ideas": [],
+	"/(app)/projects/[id]/milestones": [],
+	"/(app)/projects/[id]/project-logs": [],
+	"/(app)/projects/[id]/tasks": [],
+	"/(app)/projects/[id]/updates": []
 }

@@ -29,33 +29,38 @@ declare module "$app/types" {
 	type MatcherParam<M> = M extends (param : string) => param is (infer U extends string) ? U : string;
 
 	export interface AppTypes {
-		RouteId(): "/" | "/ideas" | "/projects" | "/projects/[id]" | "/projects/[id]/archive" | "/projects/[id]/boards" | "/projects/[id]/editor" | "/projects/[id]/editor/[did]" | "/projects/[id]/ideas" | "/projects/[id]/milestones" | "/projects/[id]/project-logs" | "/projects/[id]/tasks" | "/projects/[id]/updates";
+		RouteId(): "/(editor)" | "/(app)" | "/" | "/(app)/ideas" | "/(editor)/projects" | "/(app)/projects" | "/(editor)/projects/[id]" | "/(app)/projects/[id]" | "/(app)/projects/[id]/archive" | "/(app)/projects/[id]/boards" | "/(editor)/projects/[id]/editor" | "/(editor)/projects/[id]/editor/[did]" | "/(app)/projects/[id]/ideas" | "/(app)/projects/[id]/milestones" | "/(app)/projects/[id]/project-logs" | "/(app)/projects/[id]/tasks" | "/(app)/projects/[id]/updates";
 		RouteParams(): {
-			"/projects/[id]": { id: string };
-			"/projects/[id]/archive": { id: string };
-			"/projects/[id]/boards": { id: string };
-			"/projects/[id]/editor": { id: string };
-			"/projects/[id]/editor/[did]": { id: string; did: string };
-			"/projects/[id]/ideas": { id: string };
-			"/projects/[id]/milestones": { id: string };
-			"/projects/[id]/project-logs": { id: string };
-			"/projects/[id]/tasks": { id: string };
-			"/projects/[id]/updates": { id: string }
+			"/(editor)/projects/[id]": { id: string };
+			"/(app)/projects/[id]": { id: string };
+			"/(app)/projects/[id]/archive": { id: string };
+			"/(app)/projects/[id]/boards": { id: string };
+			"/(editor)/projects/[id]/editor": { id: string };
+			"/(editor)/projects/[id]/editor/[did]": { id: string; did: string };
+			"/(app)/projects/[id]/ideas": { id: string };
+			"/(app)/projects/[id]/milestones": { id: string };
+			"/(app)/projects/[id]/project-logs": { id: string };
+			"/(app)/projects/[id]/tasks": { id: string };
+			"/(app)/projects/[id]/updates": { id: string }
 		};
 		LayoutParams(): {
+			"/(editor)": { id?: string; did?: string };
+			"/(app)": { id?: string };
 			"/": { id?: string; did?: string };
-			"/ideas": Record<string, never>;
-			"/projects": { id?: string; did?: string };
-			"/projects/[id]": { id: string; did?: string };
-			"/projects/[id]/archive": { id: string };
-			"/projects/[id]/boards": { id: string };
-			"/projects/[id]/editor": { id: string; did?: string };
-			"/projects/[id]/editor/[did]": { id: string; did: string };
-			"/projects/[id]/ideas": { id: string };
-			"/projects/[id]/milestones": { id: string };
-			"/projects/[id]/project-logs": { id: string };
-			"/projects/[id]/tasks": { id: string };
-			"/projects/[id]/updates": { id: string }
+			"/(app)/ideas": Record<string, never>;
+			"/(editor)/projects": { id?: string; did?: string };
+			"/(app)/projects": { id?: string };
+			"/(editor)/projects/[id]": { id: string; did?: string };
+			"/(app)/projects/[id]": { id: string };
+			"/(app)/projects/[id]/archive": { id: string };
+			"/(app)/projects/[id]/boards": { id: string };
+			"/(editor)/projects/[id]/editor": { id: string; did?: string };
+			"/(editor)/projects/[id]/editor/[did]": { id: string; did: string };
+			"/(app)/projects/[id]/ideas": { id: string };
+			"/(app)/projects/[id]/milestones": { id: string };
+			"/(app)/projects/[id]/project-logs": { id: string };
+			"/(app)/projects/[id]/tasks": { id: string };
+			"/(app)/projects/[id]/updates": { id: string }
 		};
 		Pathname(): "/" | "/ideas" | `/projects/${string}` & {} | `/projects/${string}/archive` & {} | `/projects/${string}/boards` & {} | `/projects/${string}/editor/${string}` & {} | `/projects/${string}/ideas` & {} | `/projects/${string}/milestones` & {} | `/projects/${string}/project-logs` & {} | `/projects/${string}/tasks` & {} | `/projects/${string}/updates` & {};
 		ResolvedPathname(): `${"" | `/${string}`}${ReturnType<AppTypes['Pathname']>}`;

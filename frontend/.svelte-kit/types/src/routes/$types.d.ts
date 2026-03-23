@@ -10,14 +10,10 @@ type OutputDataShape<T> = MaybeWithVoid<Omit<App.PageData, RequiredKeys<T>> & Pa
 type EnsureDefined<T> = T extends null | undefined ? {} : T;
 type OptionalUnion<U extends Record<string, any>, A extends keyof U = U extends U ? keyof U : never> = U extends unknown ? { [P in Exclude<A, keyof U>]?: never } & U : never;
 export type Snapshot<T = any> = Kit.Snapshot<T>;
-type PageParentData = EnsureDefined<LayoutData>;
-type LayoutRouteId = RouteId | "/" | "/ideas" | "/projects/[id]" | "/projects/[id]/archive" | "/projects/[id]/boards" | "/projects/[id]/editor/[did]" | "/projects/[id]/ideas" | "/projects/[id]/milestones" | "/projects/[id]/project-logs" | "/projects/[id]/tasks" | "/projects/[id]/updates" | null
+type LayoutRouteId = RouteId | "/(app)" | "/(app)/ideas" | "/(app)/projects/[id]" | "/(app)/projects/[id]/archive" | "/(app)/projects/[id]/boards" | "/(app)/projects/[id]/ideas" | "/(app)/projects/[id]/milestones" | "/(app)/projects/[id]/project-logs" | "/(app)/projects/[id]/tasks" | "/(app)/projects/[id]/updates" | "/(editor)/projects/[id]/editor/[did]" | null
 type LayoutParams = RouteParams & { id?: string; did?: string }
 type LayoutParentData = EnsureDefined<{}>;
 
-export type PageServerData = null;
-export type PageData = Expand<PageParentData>;
-export type PageProps = { params: RouteParams; data: PageData }
 export type LayoutServerData = null;
 export type LayoutData = Expand<LayoutParentData>;
 export type LayoutProps = { params: LayoutParams; data: LayoutData; children: import("svelte").Snippet }

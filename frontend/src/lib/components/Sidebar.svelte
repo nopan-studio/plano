@@ -61,10 +61,16 @@
   </div>
 
   <div class="workspaces-dropdown" class:show={showDropdown}>
-    <div class="dropdown-trigger" onclick={toggleDropdown}>
+    <button 
+      class="dropdown-trigger" 
+      type="button"
+      onclick={toggleDropdown}
+      aria-expanded={showDropdown}
+      aria-haspopup="listbox"
+    >
       <span id="active-workspace-name">{activeProject ? activeProject.name : 'Select Workspace'}</span>
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-    </div>
+    </button>
     
     {#if showDropdown}
       <div id="workspaces-list" class="dropdown-content show">

@@ -42,8 +42,10 @@ def create_idea():
     if status not in IDEA_STATUSES:
         return err(f'status must be one of: {", ".join(IDEA_STATUSES)}')
 
+    mid = body.get('milestone_id')
     idea = Idea(
         project_id=body.get('project_id'),
+        milestone_id=mid if (mid is not None and mid >= 0) else None,
         title=title,
         description=body.get('description', ''),
         status=status,
@@ -80,6 +82,9 @@ def update_idea(iid):
         idea.project_id = body['project_id']
     if 'tags' in body:
         idea.tags = json.dumps(body['tags'])
+    if 'milestone_id' in body:
+        mid = body['milestone_id']
+        idea.milestone_id = mid if (mid is not None and mid >= 0) else None
 
     from datetime import datetime
     idea.updated_at = datetime.utcnow()

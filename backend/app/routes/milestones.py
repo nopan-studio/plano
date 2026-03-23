@@ -16,6 +16,11 @@ def ok(data, code=200):
     return jsonify(data), code
 
 
+@milestones_bp.route('/api/milestones', methods=['GET'])
+def list_all_milestones():
+    return ok([m.to_dict() for m in Milestone.query.order_by(Milestone.due_date.asc()).all()])
+
+
 @milestones_bp.route('/api/projects/<int:pid>/milestones', methods=['GET'])
 def list_milestones(pid):
     db.get_or_404(Project, pid)

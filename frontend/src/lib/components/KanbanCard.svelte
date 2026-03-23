@@ -1,6 +1,11 @@
 <script>
   import { md, fmtDate } from '$lib/utils';
-  let { task, milestones = [], isDragging = false, ondragstart, ondragend, onclick } = $props();
+  let { 
+    task, milestones = [], isDragging = false, dropStatus = null,
+    isDropTarget = false, isLastDropTarget = false,
+    ondragstart, ondragend, onclick 
+  } = $props();
+  
   const pColor = $derived({
     low: 'var(--text-dim)',
     medium: 'var(--blue)',
@@ -18,6 +23,9 @@
   tabindex="0"
   class:ai-active={task.is_ai_working}
   class:dragging={isDragging}
+  class:projecting={isDragging && dropStatus !== null}
+  class:drop-target={isDropTarget}
+  class:last-drop-target={isLastDropTarget}
   {ondragstart}
   {ondragend}
   {onclick}
@@ -88,19 +96,45 @@
     border-radius: var(--r);
     padding: 16px;
     cursor: grab;
-    transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+    transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.2s ease, border-color 0.15s ease, opacity 0.2s ease;
     position: relative;
     user-select: none;
     overflow: visible; /* Prevent AI badge clipping */
+    will-change: transform, box-shadow, border-color;
   }
   .k-card:hover {
     border-color: var(--accent);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    transform: translateY(-4px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.5), 0 0 0 1px var(--accent-dim);
+    z-index: 10;
   }
   :global(.k-card.dragging) {
-    opacity: 0.3 !important;
-    transform: scale(0.96);
+    opacity: 0.5 !important;
+    pointer-events: none;
+  }
+  :global(.k-card.projecting) {
+    opacity: 0 !important;
+    pointer-events: none;
+    background: transparent !important;
+    border-color: transparent !important;
     box-shadow: none !important;
+    transition: opacity 0.1s ease !important;
+  }
+  :global(.is-dragging) .k-card {
+    pointer-events: none;
+    transition: none !important; /* Performance during drag */
+  }
+  .k-card.drop-target:not(.dragging) {
+    border-color: var(--accent);
+    box-shadow: inset 0 4px 0 var(--accent), 0 5px 25px var(--accent-dim);
+    z-index: 10;
+    transition: border-color 0.1s ease, box-shadow 0.1s ease !important;
+  }
+  .k-card.last-drop-target:not(.dragging) {
+    border-color: var(--accent);
+    box-shadow: inset 0 -4px 0 var(--accent), 0 5px 25px var(--accent-dim);
+    z-index: 10;
+    transition: border-color 0.1s ease, box-shadow 0.1s ease !important;
   }
   .k-card-id {
     font-size: 10px;

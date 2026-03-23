@@ -17,7 +17,6 @@ def register_blueprints(app):
     from app.routes.api_docs import api_docs_bp
     from app.routes.layout import layout_bp
     from app.routes.portability import portability_bp
-    from app.routes.events import events_bp
 
     app.register_blueprint(projects_bp)
     app.register_blueprint(tasks_bp)
@@ -32,4 +31,3 @@ def register_blueprints(app):
     app.register_blueprint(api_docs_bp)
     app.register_blueprint(layout_bp)
     app.register_blueprint(portability_bp)
-    app.register_blueprint(events_bp)

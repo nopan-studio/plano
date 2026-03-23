@@ -734,7 +734,7 @@ def list_ideas(project_id: int = -1, status: str = "") -> str:
 
     Args:
         project_id: Filter by project (-1 = all projects).
-        status: Filter by status (new/exploring/accepted/rejected). Empty = all.
+        status: Filter by status (new/exploring/accepted/implemented/rejected). Empty = all.
     """
     params = []
     if project_id >= 0:
@@ -750,6 +750,7 @@ def create_idea(
     title: str,
     description: str = "",
     project_id: int = -1,
+    milestone_id: int = -1,
     tags: str = "[]",
 ) -> str:
     """Create an idea, optionally scoped to a project.
@@ -758,11 +759,14 @@ def create_idea(
         title: Idea title.
         description: Description.
         project_id: Link to project (-1 = global idea).
+        milestone_id: Link to milestone (-1 = none).
         tags: JSON array string of tags.
     """
     body: dict = {"title": title, "description": description, "tags": json.loads(tags)}
     if project_id >= 0:
         body["project_id"] = project_id
+    if milestone_id >= 0:
+        body["milestone_id"] = milestone_id
     return json.dumps(_api("POST", "/api/ideas", body), indent=2)
 
 
@@ -774,6 +778,40 @@ def vote_idea(idea_id: int) -> str:
         idea_id: The idea ID.
     """
     return json.dumps(_api("POST", f"/api/ideas/{idea_id}/vote", {}), indent=2)
+
+
+@mcp.tool()
+def update_idea(
+    idea_id: int,
+    title: str = "",
+    description: str = "",
+    status: str = "",
+    project_id: int = -1,
+    milestone_id: int = -1,
+    tags: str = "",
+) -> str:
+    """Update an idea. Only provided fields are changed.
+
+    Args:
+        idea_id: The idea ID.
+        title: New title (empty = keep).
+        description: New description (empty = keep).
+        status: New status (new/exploring/accepted/implemented/rejected, empty = keep).
+        project_id: New project link (-1 = keep, -2 = remove).
+        milestone_id: New milestone link (-1 = keep, -2 = remove).
+        tags: New tags JSON array string (empty = keep).
+    """
+    body: dict = {}
+    if title: body["title"] = title
+    if description: body["description"] = description
+    if status: body["status"] = status
+    if project_id == -2: body["project_id"] = None
+    elif project_id >= 0: body["project_id"] = project_id
+    if milestone_id == -2: body["milestone_id"] = None
+    elif milestone_id >= 0: body["milestone_id"] = milestone_id
+    if tags: body["tags"] = json.loads(tags)
+    
+    return json.dumps(_api("PATCH", f"/api/ideas/{idea_id}", body), indent=2)
 
 
 # ── Diagrams (Boards) ────────────────────────────────────────────────────────

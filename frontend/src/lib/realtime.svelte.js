@@ -1,11 +1,12 @@
 import { browser } from '$app/environment';
+import { io } from 'socket.io-client';
 
 export const realtime = $state({
   connection: 'disconnected', // 'connected', 'connecting', 'disconnected'
   lastEvent: null
 });
 
-let source = null;
+let socket = null;
 const handlers = new Set();
 
 /**
@@ -19,45 +20,51 @@ export function addRealtimeHandler(fn) {
 }
 
 /**
- * Initialize the EventSource connection to the server.
+ * Initialize the Socket.IO connection to the server.
  */
 export function initRealtime() {
-  if (!browser || source) return;
+  if (!browser || socket) return;
   
-  console.log('📡 Initializing Real-time Events...');
-  source = new EventSource('/api/events');
+  console.log('📡 Initializing WebSocket Real-time Events...');
   realtime.connection = 'connecting';
+  
+  // Use current host for socket connection
+  socket = io({
+    reconnection: true,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+    reconnectionAttempts: Infinity
+  });
 
-  source.onopen = () => {
+  socket.on('connect', () => {
     realtime.connection = 'connected';
-    console.log('✅ SSE Connected');
-  };
+    console.log('✅ WebSocket Connected');
+  });
 
-  source.onmessage = (e) => {
-    try {
-      const event = JSON.parse(e.data);
-      console.log('🔗 Event Received:', event.type, event.data);
-      realtime.lastEvent = event;
-      handlers.forEach(h => h(event));
-    } catch (err) {
-      if (e.data === ': heartbeat') return;
-      console.error('SSE JSON Error:', err, e.data);
-    }
-  };
+  socket.on('message', (event) => {
+    console.log('🔗 Socket Event Received:', event.type, event.data);
+    realtime.lastEvent = event;
+    handlers.forEach(h => h(event));
+  });
 
-  source.onerror = () => {
+  socket.on('disconnect', (reason) => {
     realtime.connection = 'disconnected';
-    console.warn('⚠️ SSE Disconnected, retrying...');
-  };
+    console.warn('⚠️ WebSocket Disconnected:', reason);
+  });
+
+  socket.on('connect_error', (error) => {
+    realtime.connection = 'disconnected';
+    console.error('❌ Socket Connection Error:', error);
+  });
 }
 
 /**
  * Close the realtime connection.
  */
 export function closeRealtime() {
-  if (source) {
-    source.close();
-    source = null;
+  if (socket) {
+    socket.close();
+    socket = null;
     realtime.connection = 'disconnected';
   }
 }

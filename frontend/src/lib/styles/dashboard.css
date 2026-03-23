@@ -5,7 +5,7 @@ button{cursor:pointer;font-family:var(--sans)}
 
 /* ── Layout ── */
 .shell{display:flex;flex-direction:column;height:100vh}
-.topbar{display:flex;align-items:center;gap:12px;padding:16px 24px;background:var(--panel);border-bottom:1px solid var(--border);flex-shrink:0;position:sticky;top:0;z-index:20;font-weight:700;letter-spacing:-.3px;white-space:nowrap}
+.topbar{display:flex;align-items:center;gap:12px;padding:16px 24px;background:var(--panel);border-bottom:1px solid var(--border);flex-shrink:0;position:sticky;top:0;z-index:99999;font-weight:700;letter-spacing:-.3px;white-space:nowrap;view-transition-name: topbar}
 .logo em{color:var(--accent);font-style:normal}
 .top-nav{display:flex;gap:4px;margin-left:auto}
 .top-nav a,.top-nav button{padding:5px 12px;border-radius:var(--r);color:var(--text-mid);font-size:12px;font-weight:600;border:none;background:none;transition:.12s}
@@ -17,12 +17,12 @@ button{cursor:pointer;font-family:var(--sans)}
 .breadcrumb a:hover{text-decoration:underline}
 
 .body{display:flex;flex:1;overflow:hidden}
-.sidebar{width:240px;height:100%;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:16px 12px;overflow-y:auto;flex-shrink:0}
+.sidebar{width:240px;height:100%;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:16px 12px;overflow-y:auto;flex-shrink:0;position:relative;z-index:99998;view-transition-name: sidebar}
 .sidebar-hd{font-size:11px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;margin:12px 8px 8px;display:flex;align-items:center;justify-content:space-between}
 .sidebar a, .nav-item{display:flex;align-items:center;padding:8px 12px;border-radius:var(--r);color:var(--text-mid);font-size:13px;font-weight:600;margin-bottom:2px;transition:0.15s;text-decoration:none}
 .sidebar a:hover, .nav-item:hover{background:var(--surface);color:var(--text)}
 .sidebar a.act, .nav-item.act{background:var(--accent-dim);color:var(--accent)}
-.sidebar .badge{margin-left:auto;font-size:10px;font-family:var(--mono);background:var(--surface2);padding:1px 6px;border-radius:8px;color:var(--text-dim)}
+.sidebar .badge{margin-left:auto;font-size:10px;font-family:var(--mono);background:var(--bg);padding:2px 7px;border-radius:10px;color:var(--text-mid);border:1px solid var(--border)}
 
 /* Add Workspace Button */
 .add-workspace-btn{background:transparent;border:none;color:var(--text-dim);cursor:pointer;font-size:16px;line-height:1;padding:4px;border-radius:4px;transition:0.15s}
@@ -30,11 +30,12 @@ button{cursor:pointer;font-family:var(--sans)}
 
 /* Workspaces Dropdown */
 .workspaces-dropdown{position:relative;margin:0 8px}
-.dropdown-trigger{padding:8px 12px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:600;transition:0.15s}
-.dropdown-trigger:hover{border-color:var(--accent)}
-.dropdown-content{position:absolute;top:100%;left:0;right:0;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);margin-top:4px;z-index:100;max-height:300px;overflow-y:auto;display:none;box-shadow:0 8px 24px rgba(0,0,0,0.5)}
+.dropdown-trigger{padding:8px 12px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:600;transition:0.15s;width:100%}
+.dropdown-trigger:hover{border-color:var(--accent);background:var(--surface2)}
+.dropdown-content{position:absolute;top:100%;left:0;right:0;background:var(--panel2);border:1px solid var(--border2);border-radius:var(--r);margin-top:6px;z-index:100000;max-height:300px;overflow-y:auto;display:none;box-shadow:var(--shadow-lg)}
 .dropdown-content.show{display:block}
-.dropdown-content a{margin:4px;border-radius:6px}
+.dropdown-content a{margin:4px;border-radius:6px;color:var(--text-mid)}
+.dropdown-content a:hover{background:var(--surface);color:var(--text)}
 
 /* Project Sub-nav in Sidebar */
 .sidebar-subnav{margin-top:12px;border-top:1px solid var(--border);padding-top:12px}
@@ -77,6 +78,8 @@ button{cursor:pointer;font-family:var(--sans)}
 .s-active{background:var(--green-dim);color:var(--green)}
 .s-on_hold{background:var(--amber-dim);color:var(--amber)}
 .s-completed{background:var(--purple-dim);color:var(--purple)}
+.s-implemented{background:var(--teal-dim);color:var(--teal)}
+.s-rejected{background:var(--rose-dim);color:var(--rose)}
 .s-archived{background:var(--surface);color:var(--text-dim)}
 .s-bugs{background:var(--rose-dim);color:var(--rose)}
 .s-todo{background:var(--surface);color:var(--text-mid)}
@@ -462,3 +465,19 @@ textarea{resize:vertical;min-height:70px}
 .mcp-indicator .dots span:nth-child(2) { animation-delay: .2s; }
 .mcp-indicator .dots span:nth-child(3) { animation-delay: .4s; }
 @keyframes dotBlink { 0%, 100% { opacity: .3; } 50% { opacity: 1; } }
+
+/* ── View Transitions Stacking ── */
+::view-transition-group(topbar) {
+  z-index: 999999;
+}
+::view-transition-group(sidebar) {
+  z-index: 999998;
+}
+::view-transition-group(*) {
+  z-index: 1000;
+}
+
+::view-transition-old(*),
+::view-transition-new(*) {
+  animation-duration: 0.15s !important;
+}

@@ -1,20 +1,14 @@
 <script>
   import { flip } from 'svelte/animate';
+  import { cubicOut } from 'svelte/easing';
   import KanbanCard from './KanbanCard.svelte';
   let { 
     col, tasks = [], milestones = [], 
-    dropIndex = -1, dropStatus = null, draggingTaskId = null, draggingTaskHeight = 0,
+    dropIndex = -1, dropStatus = null, dropTargetId = null, draggingTaskId = null, draggingTaskHeight = 0,
     ontaskdrop, ondragover, ontaskclick, onaddtask, onarchiveall, 
-    handleDragStart, handleDragEnd 
+    handleDragStart, handleDragEnd
   } = $props();
 
-  const augmentedTasks = $derived.by(() => {
-    if (dropStatus !== col.id) return tasks;
-    const res = [...tasks];
-    const idx = Math.min(dropIndex, res.length);
-    res.splice(idx, 0, { id: 'drop-placeholder', isPlaceholder: true });
-    return res;
-  });
 </script>
 
 <div class="kanban-col col-{col.id === 'in_progress' ? 'progress' : col.id}">
@@ -30,29 +24,34 @@
   <div class="kanban-col-sub">{col.sub}</div>
   <div 
     class="kanban-col-body" 
+    class:drag-over={dropStatus === col.id}
     data-status={col.id}
     role="region"
     aria-label="Tasks column for {col.label}"
     ondragover={e => ondragover(e, col.id)} 
     ondrop={e => ontaskdrop(e, col.id)}
   >
-    {#each augmentedTasks as task (task.id)}
-      <div animate:flip={{ duration: 250 }}>
-        {#if task.isPlaceholder}
-          <div class="drop-placeholder" style="height: {draggingTaskHeight}px"></div>
-        {:else}
-          <KanbanCard 
-            {task} 
-            {milestones}
-            isDragging={task.id === draggingTaskId}
-            ondragstart={e => handleDragStart(e, task)} 
-            {handleDragEnd}
-            onclick={() => ontaskclick(task)}
-          />
-        {/if}
+    {#each tasks as task, i (task.id)}
+      <div animate:flip={{ duration: 150, easing: cubicOut }}>
+        <KanbanCard 
+          {task} 
+          {milestones}
+          isDragging={task.id === draggingTaskId}
+          isDropTarget={dropStatus === col.id && String(dropTargetId) === String(task.id) && task.id !== draggingTaskId}
+          isLastDropTarget={dropStatus === col.id && dropTargetId === 'bottom' && i === tasks.length - 1 && task.id !== draggingTaskId}
+          {dropStatus}
+          ondragstart={e => handleDragStart(e, task)} 
+          ondragend={handleDragEnd}
+          onclick={() => ontaskclick(task)}
+        />
       </div>
     {:else}
-      <div class="empty-col">No {col.id === 'bugs' ? 'bugs recorded' : 'tasks'}</div>
+      <div 
+        class="empty-col"
+        class:drop-target={dropStatus === col.id}
+      >
+        No {col.id === 'bugs' ? 'bugs recorded' : 'tasks'}
+      </div>
     {/each}
   </div>
 </div>
@@ -74,7 +73,7 @@
     position: sticky;
     top: -24px; /* Offset for .main padding */
     background: var(--bg);
-    z-index: 20;
+    z-index: 500;
     margin-bottom: 12px;
   }
   .kanban-col-hd h3 {
@@ -142,15 +141,22 @@
     overflow: visible;
   }
   
-  :global(.kanban-col-body.drag-over) {
-    background: rgba(255,255,255,0.02);
-  }
+/* Empty ruleset removed */
 
   .col-todo .status-circle { background: var(--text-dim); }
+  .col-todo .cnt { color: var(--text-mid); background: var(--surface2); }
+  
   .col-progress .status-circle { background: var(--blue); box-shadow: 0 0 8px var(--blue-glow); }
+  .col-progress .cnt { color: var(--blue); background: var(--blue-dim); }
+  
   .col-review .status-circle { background: var(--purple); }
+  .col-review .cnt { color: var(--purple); background: var(--purple-dim); }
+  
   .col-done .status-circle { background: var(--green); }
+  .col-done .cnt { color: var(--green); background: var(--green-dim); }
+  
   .col-bugs .status-circle { background: var(--rose); }
+  .col-bugs .cnt { color: var(--rose); background: var(--rose-dim); }
 
   .empty-col {
     text-align: center;
@@ -159,13 +165,11 @@
     font-size: 12px;
     border: 1px dashed var(--border);
     border-radius: var(--r);
+    transition: background 0.2s, border-color 0.2s;
   }
-  .drop-placeholder {
-    background: var(--surface2);
-    border: 2px dashed var(--border);
-    border-radius: var(--r);
-    margin: 8px 0;
-    opacity: 0.6;
-    transition: height 0.2s;
+  .empty-col.drop-target {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent);
   }
 </style>

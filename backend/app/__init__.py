@@ -12,6 +12,7 @@ db = SQLAlchemy()
 
 def create_app(config_class=None):
     """Create and configure the Flask application."""
+    from app.events import event_bus
     app = Flask(__name__, template_folder='../templates',
                 static_folder='../static', static_url_path='/static')
 
@@ -24,9 +25,9 @@ def create_app(config_class=None):
 
     # Initialize extensions
     db.init_app(app)
+    socketio = event_bus.init_app(app)
     CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-    from app.events import event_bus
     from flask import request
 
     @app.before_request

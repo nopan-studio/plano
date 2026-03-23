@@ -87,6 +87,7 @@ button {
   border: none;
   background: none;
   outline: none;
+  color: inherit;
 }
 
 /* Global Animations */

@@ -1,8 +1,6 @@
-"""
-Plano entry point — imports app factory and runs the server.
-Copyright (C) 2026 nopan-studio
-Licensed under GNU General Public License v3.0.
-"""
+import eventlet
+eventlet.monkey_patch()
+
 import argparse
 import sys
 
@@ -18,21 +16,22 @@ def main():
     args = parser.parse_args()
 
     from app import create_app
+    from app.events import event_bus
     application = create_app()
+    socketio = event_bus.socketio
 
-    print(f'  Plano PM running on http://{args.host}:{args.port}')
+    print(f'  Plano PM (WebSocket Mode) running on http://{args.host}:{args.port}')
     print(f'  Health check: http://{args.host}:{args.port}/health')
     print(f'  API docs:     http://{args.host}:{args.port}/api')
     print(f'  Dashboard:    http://{args.host}:{args.port}/')
     print('  Press Ctrl+C to stop.\n')
 
-    application.run(
+    socketio.run(
+        application,
         host=args.host,
         port=args.port,
-       #debug=args.debug,
         debug=True,
         use_reloader=False,
-        threaded=True,
     )
 
 

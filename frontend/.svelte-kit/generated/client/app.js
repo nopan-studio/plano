@@ -13,23 +13,25 @@ export const nodes = [
 	() => import('./nodes/9'),
 	() => import('./nodes/10'),
 	() => import('./nodes/11'),
-	() => import('./nodes/12')
+	() => import('./nodes/12'),
+	() => import('./nodes/13'),
+	() => import('./nodes/14')
 ];
 
 export const server_loads = [];
 
 export const dictionary = {
-		"/": [2],
-		"/ideas": [3],
-		"/projects/[id]": [4],
-		"/projects/[id]/archive": [5],
-		"/projects/[id]/boards": [6],
-		"/projects/[id]/editor/[did]": [7],
-		"/projects/[id]/ideas": [8],
-		"/projects/[id]/milestones": [9],
-		"/projects/[id]/project-logs": [10],
-		"/projects/[id]/tasks": [11],
-		"/projects/[id]/updates": [12]
+		"/(app)": [4,[2]],
+		"/(app)/ideas": [5,[2]],
+		"/(app)/projects/[id]": [6,[2]],
+		"/(app)/projects/[id]/archive": [7,[2]],
+		"/(app)/projects/[id]/boards": [8,[2]],
+		"/(editor)/projects/[id]/editor/[did]": [14,[3]],
+		"/(app)/projects/[id]/ideas": [9,[2]],
+		"/(app)/projects/[id]/milestones": [10,[2]],
+		"/(app)/projects/[id]/project-logs": [11,[2]],
+		"/(app)/projects/[id]/tasks": [12,[2]],
+		"/(app)/projects/[id]/updates": [13,[2]]
 	};
 
 export const hooks = {

@@ -27,7 +27,7 @@ EDGE_TYPES = {
 PROJECT_STATUSES = ['planning', 'active', 'on_hold', 'completed', 'archived']
 TASK_STATUSES = ['todo', 'in_progress', 'review', 'done', 'bugs', 'archived']
 MILESTONE_STATUSES = ['pending', 'in_progress', 'completed', 'missed']
-IDEA_STATUSES = ['new', 'exploring', 'accepted', 'rejected']
+IDEA_STATUSES = ['new', 'exploring', 'accepted', 'implemented', 'rejected']
 UPDATE_TYPES = ['progress', 'blocker', 'decision', 'bug_fix', 'note']
 PRIORITIES = ['low', 'medium', 'high', 'critical']
 
@@ -215,13 +215,17 @@ class Idea(db.Model):
     description = db.Column(db.Text, default='')
     status = db.Column(db.String(32), default='new')
     votes = db.Column(db.Integer, default=0)
-    tags = db.Column(db.Text, default='[]')  # JSON array
+    milestone_id = db.Column(db.Integer, db.ForeignKey('milestone.id'), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationship
+    milestone = db.relationship('Milestone', backref='ideas', lazy=True)
 
     def to_dict(self):
         return dict(
             id=self.id, project_id=self.project_id,
+            milestone_id=self.milestone_id,
             title=self.title, description=self.description,
             status=self.status, votes=self.votes,
             tags=json.loads(self.tags or '[]'),

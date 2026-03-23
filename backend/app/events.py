@@ -1,35 +1,19 @@
 import json
-from queue import Queue, Empty
+from flask_socketio import SocketIO, emit
 
-class EventBus:
+class SocketEventBus:
     def __init__(self):
-        self.listeners = []
+        self.socketio = None
 
-    def listen(self):
-        q = Queue(maxsize=100)
-        self.listeners.append(q)
-        return q
+    def init_app(self, app):
+        self.socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
+        return self.socketio
 
     def broadcast(self, event_type, data):
-        message = json.dumps({'type': event_type, 'data': data})
-        for q in self.listeners[:]:
-            try:
-                q.put_nowait(message)
-            except Exception:
-                if q in self.listeners:
-                    self.listeners.remove(q)
+        """Broadcast an event to all connected clients via WebSockets."""
+        if self.socketio:
+            self.socketio.emit('message', {'type': event_type, 'data': data})
+        else:
+            print(f"⚠️ SocketIO not initialized. Event dropped: {event_type}")
 
-event_bus = EventBus()
-
-def sse_generator(q):
-    """Generator for Server-Sent Events."""
-    while True:
-        try:
-            # Wait for data from the queue
-            message = q.get(timeout=30)  # Heartbeat every 30s if no data
-            yield f"data: {message}\n\n"
-        except Empty:
-            # Send an empty comment as a heartbeat to keep the connection alive
-            yield ": heartbeat\n\n"
-        except Exception:
-            break
+event_bus = SocketEventBus()

@@ -8,7 +8,7 @@ It features built-in visual diagrams alongside standard task tracking so your ar
 ## Features
 
 - **Project & Task Management**: A full project tracking system with milestones, tasks (kanban/list views), tags, and updates.
-- **Dynamic Visual Boards**: Create interactive diagrams directly within projects (Process Flows, DB Diagrams, Flowcharts, Idea Maps, and more).
+- **Overhauled Visual Boards**: A completely rebuilt high-fidelity editor for diagrams (Process Flows, DB Diagrams, Flowcharts) with reactive state and intelligent auto-layout.
 - **Relational DB Visualization**: Rich metadata schema for database nodes, including columns, types, and primary/foreign keys.
 - **MCP Native Integration**: Built from the ground up to be easily operated via the Model Context Protocol (MCP).
 - **Real-time Reactivity**: Live system-wide updates and AI tool-call indicators powered by Server-Sent Events (SSE).
@@ -18,10 +18,17 @@ It features built-in visual diagrams alongside standard task tracking so your ar
 
 ## Screenshots
 
-![Screenshot 1](https://github.com/nopan-studio/plano/raw/main/static/1.png)
-![Screenshot 2](https://github.com/nopan-studio/plano/raw/main/static/2.png)
-![Screenshot 3](https://github.com/nopan-studio/plano/raw/main/static/3.png)
-![Screenshot 4](https://github.com/nopan-studio/plano/raw/main/static/4.png)
+![Project Dashboard](https://github.com/nopan-studio/plano/raw/main/static/1.png)
+*Figure 1: Unified dashboard with real-time progress tracking.*
+
+![Kanban Workflow](https://github.com/nopan-studio/plano/raw/main/static/2.png)
+*Figure 2: Interactive Kanban board with AI-activity indicators.*
+
+![Process Architect](https://github.com/nopan-studio/plano/raw/main/static/3.png)
+*Figure 3: Architect-level process flows and system diagrams.*
+
+![Board Editor Overhaul](https://github.com/nopan-studio/plano/raw/main/static/4.png)
+*Figure 4: **Major Overhaul**: High-fidelity Board Editor with reactive database modeling and intelligent edge routing.*
 
 
 ## Getting Started
@@ -124,7 +131,7 @@ Add the following to your `claude_desktop_config.json` (replacing `/PATH/TO/PLAN
   - **Unified Workspace Structure**: Migrated all core logic into a clean `/backend` and `/frontend` directory structure.
   - **Gevent Performance Boost**: Replaced `eventlet` with `gevent` for significant performance improvements and better SocketIO stability.
   - **Docker Engine Revamp**: Introduced a unified `docker-run.sh` management script and optimized `docker-compose` for full-stack deployments.
-  - **Visual Board Polish**: Fixed node corner visual bugs and implemented conditional visibility for column connection points in DB Diagrams.
+  - **Complete Board Editor Overhaul**: Fully rebuilt reactive canvas with improved performance, intelligent edge routing, and rich database modeling (as showcased in Figure 4).
   - **Silent Data Sync**: Optimized the dashboard to perform "silent reloads" for project meta changes, eliminating UI flickering during AI tool calls.
   - **Enhanced AI Notifications**: Added real-time toast notifications whenever an AI agent utilizes an MCP tool.
 

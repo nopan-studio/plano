@@ -7,15 +7,29 @@ This guide is designed for **AI Assistants** (like Antigravity, Windsurf, or Cur
 ## 🤖 Step 1: Automated Environment Setup
 Copy the following command block and execute it in your terminal. This will detect your OS, set up the virtual environment, install dependencies, and start the Plano server.
 
+### Linux / macOS
 ```bash
-# Detected OS: Linux/macOS
 python3 -m venv venv && source venv/bin/activate && pip install -r backend/requirements.txt && ./start.sh
-
-# Docker Setup (Full Stack in Container)
-./docker-run.sh start
 ```
 
-*(If on Windows, use: `python -m venv venv && .\venv\Scripts\activate && pip install -r backend/requirements.txt && cd backend && python run.py` then `cd ../frontend && npm install && npm run dev`)*
+### Windows
+```powershell
+python -m venv venv
+.\venv\Scripts\activate
+pip install -r backend/requirements.txt
+# Start backend
+cd backend
+python run.py
+# Start frontend (separate terminal)
+cd ../frontend
+npm install
+npm run dev
+```
+
+### Docker Setup (Full Stack in Container)
+```bash
+./docker-run.sh start
+```
 
 ---
 
@@ -25,8 +39,8 @@ Plano is built with a **3-Layer Architecture** (Directives, Orchestration, Execu
 **Your Goal**: Self-configure your system prompt or project rules with these files:
 
 1.  **Read Core Rules**: [AGENTS.md](AGENTS.md)
-2.  **Read SOPs**: [directives/plano_project_oversight.md](file:///home/tsuki/Projects/plano/directives/plano_project_oversight.md)
-3.  **Read Update Standards**: [directives/plano_post_update_standard.md](file:///home/tsuki/Projects/plano/directives/plano_post_update_standard.md)
+2.  **Read SOPs**: [directives/plano_project_oversight.md](directives/plano_project_oversight.md)
+3.  **Read Update Standards**: [directives/plano_post_update_standard.md](directives/plano_post_update_standard.md)
 
 ### 📋 Checklist for the AI Assistant:
 - [ ] I have read `AGENTS.md` and understand the mandatory (Capture -> Update -> Post Update) workflow.

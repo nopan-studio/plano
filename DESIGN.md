@@ -61,16 +61,17 @@ Entire projects can be exported to a single JSON blob and imported elsewhere. Th
 
 ## 5. Directory Structure
 
--   `/app`: Core backend application logic (Flask).
-    -   `/routes`: API endpoints (Boards, Tasks, Projects, etc.).
-    -   `models.py`: Database schema definitions.
-    -   `templates_data.py`: Pre-configured project templates.
+-   `/backend`: Core backend application logic.
+    -   `/app`: Flask application, models, and routes.
+    -   `mcp_server.py`: The entry point for the MCP server, providing the tool interface for AI agents.
+    -   `run.py`: Entry point for starting the web server.
+    -   `plano.db`: The SQLite database.
 -   `/frontend`: Modern SvelteKit project (High-fidelity UI).
     -   `/src`: Svelte components and reactive logic.
 -   `/directives`: Markdown SOPs for AI agents.
 -   `/static`: Global static assets (Images, shared media).
--   `mcp_server.py`: The entry point for the MCP server, providing the tool interface for AI agents.
--   `run.py`: Entry point for starting the web server.
+-   `start.sh`: Universal script to launch both backend and frontend.
+-   `docker-run.sh`: Management script for Docker environments.
 
 ## 6. Design Aesthetics
 

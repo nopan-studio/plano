@@ -39,7 +39,7 @@ Clone the repository and set up the Python environment:
 ```bash
 python3 -m venv venv
 source venv/bin/activate
-pip install -r requirements.txt
+pip install -r backend/requirements.txt
 ./start.sh
 ```
 
@@ -47,8 +47,14 @@ pip install -r requirements.txt
 ```powershell
 python -m venv venv
 .\venv\Scripts\activate
-pip install -r requirements.txt
+pip install -r backend/requirements.txt
+# Start backend
+cd backend
 python run.py
+# Start frontend (separate terminal)
+cd ../frontend
+npm install
+npm run dev
 ```
 
 **Docker (Recommended for Production/Quick Demo):**
@@ -70,8 +76,8 @@ To enable Plano's full project management layer for your AI assistant (Cursor, W
 3.  **Verify Setup**: Ask the AI: *"What is the Plano project oversight directive?"*. If it explains the tool-calling rules, the setup is successful.
 
 ### 3. Quick Links
-- **Dashboard**: `http://localhost:5000/`
-- **API Docs**: `http://localhost:5000/api`
+- **Dashboard**: `http://localhost:5173/` (Frontend)
+- **API Server**: `http://localhost:5000/api`
 - **Health Check**: `http://localhost:5000/health`
 
 
@@ -92,7 +98,7 @@ Add the following to your `claude_desktop_config.json` (replacing `/PATH/TO/PLAN
   "mcpServers": {
     "plano": {
       "command": "/PATH/TO/PLANO/venv/bin/python",
-      "args": ["/PATH/TO/PLANO/mcp_server.py"]
+      "args": ["/PATH/TO/PLANO/backend/mcp_server.py"]
     }
   }
 }
@@ -104,7 +110,7 @@ Add the following to your `claude_desktop_config.json` (replacing `/PATH/TO/PLAN
   "mcpServers": {
     "plano": {
       "command": "C:\\PATH\\TO\\PLANO\\venv\\Scripts\\python.exe",
-      "args": ["C:\\PATH\\TO\\PLANO\\mcp_server.py"]
+      "args": ["C:\\PATH\\TO\\PLANO\\backend\\mcp_server.py"]
     }
   }
 }
@@ -113,6 +119,14 @@ Add the following to your `claude_desktop_config.json` (replacing `/PATH/TO/PLAN
 *Note: The MCP server automatically manages the lifecycle of the Flask backend. On the first tool call, it will start the backend on port 5050 if it isn't already running.*
 
 ## Recent Changes (Changelog)
+
+- **v2.6.0** (Current):
+  - **Unified Workspace Structure**: Migrated all core logic into a clean `/backend` and `/frontend` directory structure.
+  - **Gevent Performance Boost**: Replaced `eventlet` with `gevent` for significant performance improvements and better SocketIO stability.
+  - **Docker Engine Revamp**: Introduced a unified `docker-run.sh` management script and optimized `docker-compose` for full-stack deployments.
+  - **Visual Board Polish**: Fixed node corner visual bugs and implemented conditional visibility for column connection points in DB Diagrams.
+  - **Silent Data Sync**: Optimized the dashboard to perform "silent reloads" for project meta changes, eliminating UI flickering during AI tool calls.
+  - **Enhanced AI Notifications**: Added real-time toast notifications whenever an AI agent utilizes an MCP tool.
 
 - **v2.5.0** (2026-03-22):
   - **MCP Token Optimization**: Dramatic **300x reduction** in LLM token usage for project-level task management.
@@ -161,3 +175,4 @@ Plano is built using a modern, reactive stack:
 Copyright (C) 2026 nopan-studio
 MIT License
 See [LICENSE](LICENSE) for details.
+

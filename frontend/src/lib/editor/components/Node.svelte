@@ -55,6 +55,14 @@
     text: 'Floating Tag', youtube: 'Video Player'
   };
 
+  const hasBody = $derived.by(() => {
+    if (isImage) return !!node.meta?.url;
+    if (isYoutube) return !!ytId;
+    if (isCheck) return (node.meta?.items?.length || 0) > 0;
+    if (isTab) return columns.length > 0;
+    return false;
+  });
+
   function openExternal() {
     if (node.meta?.ref_diagram_id) {
       window.location.href = `/projects/${S.pid}/editor/${node.meta.ref_diagram_id}`;
@@ -65,10 +73,11 @@
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <div 
-  class="n8n-node {isSelected ? 'selected' : ''} {isNote ? 'is-note' : ''} {isText ? 'is-text' : ''} {S.isDragging && isSelected ? 'dragging' : ''}"
+  class="n8n-node {isSelected ? 'selected' : ''} {isNote ? 'is-note' : ''} {isText ? 'is-text' : ''} {S.isDragging && isSelected ? 'dragging' : ''} {S.isConnecting ? 'is-connecting' : ''}"
   style="--x: {node.x}px; --y: {node.y}px; width: {node.width || 240}px; {isTab ? 'height: auto' : `height: ${node.height || 120}px`}; --node-color: {def.c}"
   onmousedown={onMouseDown}
-  onclick={(e) => { e.stopPropagation(); S.selectNode(node.id, e.shiftKey); }}
+  onclick={(e) => { e.stopPropagation(); if (!S.wasMoved) S.selectNode(node.id, e.shiftKey); }}
+  data-id={node.id}
 >
   <div class="node-inner">
     {#if isText}
@@ -138,17 +147,19 @@
         <div class="node-cols">
           {#each columns as c, i}
             <div class="ncol">
-              <div class="port-row l {S.isConnecting?.source_id === node.id ? 'pinned' : ''}" onmousedown={(e) => onPortDown('l', i, e)}></div>
-              
               {#if c.pk}<span class="badge-pk" style="font-size:8px; padding:0 3px; border-radius:3px; margin-right:4px">PK</span>{/if}
               {#if c.fk}<span class="badge-fk" style="font-size:8px; padding:0 3px; border-radius:3px; margin-right:4px">FK</span>{/if}
               
               <span class="col-n">{c.name}</span>
               <span class="col-t">{c.type || ''}</span>
-              
-              <div class="port-row r {S.isConnecting?.source_id === node.id ? 'pinned' : ''}" onmousedown={(e) => onPortDown('r', i, e)}></div>
             </div>
           {/each}
+        </div>
+      {/if}
+      
+      {#if !hasBody && node.meta?.description}
+        <div class="node-desc-fb" style="padding: 12px 14px; border-top: 1px solid rgba(255,255,255,0.05); font-size: 11px; opacity: 0.7; line-height: 1.4;">
+          {@html md(node.meta.description)}
         </div>
       {/if}
     {/if}
@@ -157,10 +168,30 @@
   {#if !isNote}
     {#each ['l', 'r', 't', 'b'] as side}
       <div 
-        class="port port-{side} {S.isConnecting?.source_id === node.id ? 'pinned' : ''}" 
-        onmousedown={(e) => onPortDown(side, undefined, e)}
+        class="port port-{side} {S.isConnecting?.source_id === node.id && S.isConnecting?.side === side ? 'active' : ''} {S.isConnecting ? 'is-connecting' : ''}" 
+        onmousedown={(e) => onPortDown(side, -1, e)}
+        data-id={node.id} data-side={side} data-col="-1"
       ></div>
     {/each}
+    
+    {#if isTab && columns.length}
+      <div class="node-ports-overlay">
+        {#each columns as c, i}
+          <div 
+            class="port-ext l {S.isConnecting?.source_id === node.id ? 'pinned' : ''} {S.isConnecting ? 'is-connecting' : ''}" 
+            style="top: {64 + i*32 + 16}px"
+            onmousedown={(e) => onPortDown('l', i, e)}
+            data-id={node.id} data-side="l" data-col={i}
+          ></div>
+          <div 
+            class="port-ext r {S.isConnecting?.source_id === node.id ? 'pinned' : ''} {S.isConnecting ? 'is-connecting' : ''}" 
+            style="top: {64 + i*32 + 16}px"
+            onmousedown={(e) => onPortDown('r', i, e)}
+            data-id={node.id} data-side="r" data-col={i}
+          ></div>
+        {/each}
+      </div>
+    {/if}
   {/if}
   <div class="node-resizer" onmousedown={onResizeDown}></div>
 </div>
@@ -168,6 +199,5 @@
 <style>
   .ncol {
     min-height: 28px;
-    position: relative;
   }
 </style>

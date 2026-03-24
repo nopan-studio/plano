@@ -1,0 +1,1 @@
+import{w as u}from"./DsXaVp1b.js";function d(){const{subscribe:a,update:e}=u([]);function n(t,o="ok",r=3e3){const i=Math.random().toString(36).substring(2);e(c=>[...c,{id:i,message:t,type:o}]),setTimeout(()=>{s(i)},r)}function s(t){e(o=>o.filter(r=>r.id!==t))}return{subscribe:a,ok:t=>n(t,"ok"),err:t=>n(t,"err"),remove:s}}const m=d();export{m as t};

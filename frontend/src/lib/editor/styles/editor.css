@@ -18,8 +18,8 @@
   top: 0;
   left: 0;
   transform-origin: 0 0;
-  width: 5000px;
-  height: 5000px;
+  width: 10000px;
+  height: 10000px;
   z-index: 10;
   will-change: transform;
 }
@@ -32,6 +32,7 @@
   height: 100%;
   pointer-events: none;
   will-change: transform;
+  z-index: 20;
 }
 #nodes-layer > * {
   pointer-events: auto;
@@ -58,11 +59,11 @@
   position: absolute;
   top: 0;
   left: 0;
-  width: 5000px;
-  height: 5000px;
+  width: 10000px;
+  height: 10000px;
   pointer-events: none;
   overflow: visible;
-  z-index: 5;
+  z-index: 10;
 }
 
 .marquee {
@@ -92,7 +93,7 @@
     box-shadow 0.2s;
   min-width: 120px;
   max-width: 1920px;
-  min-height: 40px;
+  min-height: 64px;
   display: flex;
   flex-direction: column;
   overflow: visible;
@@ -140,6 +141,19 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  position: relative;
+}
+
+/* Colored strip on the left */
+.node-inner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--node-color, var(--node-border));
+  z-index: 5;
 }
 
 .node-row {
@@ -147,6 +161,9 @@
   align-items: stretch;
   border-bottom: 1px solid rgba(255,255,255,0.05);
   flex: 0 0 auto;
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+  overflow: hidden;
 }
 
 .node-icon-cell {
@@ -163,10 +180,18 @@
   padding: 12px 14px;
 }
 
-.node-img-wrap, .node-yt-wrap, .node-cols, .note-body, .node-draw-wrap {
+.node-img-wrap, .node-yt-wrap {
   flex: 1;
   min-height: 0;
-  overflow: auto;
+  overflow: hidden;
+}
+
+.node-cols, .note-body, .node-draw-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow: visible;
+  border-bottom-left-radius: inherit;
+  border-bottom-right-radius: inherit;
 }
 
 .node-title {
@@ -189,7 +214,7 @@
 }
 
 .n8n-node {
-  border-left: 4px solid var(--node-color, var(--node-border));
+  border: 1.5px solid var(--node-border);
 }
 
 /* DB Columns */
@@ -241,6 +266,11 @@
   border-color: #3a3620;
 }
 
+.text-node-content {
+  border-radius: inherit;
+  overflow: hidden;
+}
+
 .note-header {
   display: flex;
   align-items: center;
@@ -248,6 +278,9 @@
   border-bottom: 1px solid #3a3620;
   flex-shrink: 0;
   background: rgba(255,255,255,0.03);
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+  overflow: hidden;
 }
 
 .note-body {
@@ -288,7 +321,7 @@
   transition: opacity 0.1s, transform 0.1s, background 0.1s, border-color 0.1s;
 }
 
-.n8n-node:hover .port, .port.pinned {
+.n8n-node:hover .port, .port.pinned, .n8n-node.is-connecting .port {
   opacity: 1;
 }
 
@@ -298,6 +331,39 @@
   transform: scale(1.2) !important;
 }
 
+.port-row-ext {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: var(--surface2);
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  pointer-events: auto;
+  cursor: crosshair;
+  z-index: 100;
+  transition: all 0.2s;
+}
+.port-ext {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  z-index: 100;
+  cursor: crosshair;
+  transition: all 0.2s;
+  pointer-events: auto;
+}
+.port-ext.l { left: -6px; transform: translateY(-50%); }
+.port-ext.r { right: -6px; transform: translateY(-50%); }
+
+.port-ext:hover, .port-ext.pinned {
+  background: var(--accent);
+  border-color: var(--accent);
+  transform: translateY(-50%) scale(1.4);
+  box-shadow: 0 0 8px var(--accent-glow);
+}
 .port-l { left: -6px; top: 50%; transform: translateY(-50%); }
 .port-r { right: -6px; top: 50%; transform: translateY(-50%); }
 .port-t { top: -6px; left: 50%; transform: translateX(-50%); }
@@ -305,23 +371,23 @@
 
 .port-row {
   position: absolute;
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   background: var(--node-bg);
   border: 2px solid var(--node-border);
   cursor: crosshair;
-  z-index: 10;
+  z-index: 100;
   opacity: 0;
   transition: opacity 0.1s, transform 0.1s, background 0.1s, border-color 0.1s;
 }
 
-.ncol:hover .port-row, .port-row.pinned {
+.ncol:hover .port-row, .port-row.pinned, .n8n-node.is-connecting .port-row {
   opacity: 1;
 }
 
-.port-row.l { left: -5px; top: 50%; transform: translateY(-50%); }
-.port-row.r { right: -5px; top: 50%; transform: translateY(-50%); }
+.port-row.l { left: -6px; top: 50%; transform: translateY(-50%); }
+.port-row.r { right: -6px; top: 50%; transform: translateY(-50%); }
 
 /* ── Edges ── */
 .epath {

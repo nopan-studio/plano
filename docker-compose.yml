@@ -1,0 +1,13 @@
+services:
+  plano:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend/plano.db:/app/plano.db
+      - ./backend/plano.log:/app/plano.log
+    environment:
+      - DATABASE_URL=sqlite:////app/plano.db
+    restart: unless-stopped

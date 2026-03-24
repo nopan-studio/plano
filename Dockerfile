@@ -15,21 +15,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install
+# Copy backend requirements and install
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy backend code
 COPY backend/ ./
-# static is now in backend/static, so it's copied by the line above
 
-# Copy built frontend from Stage 1
-# This assumes the build output is in frontend/build or similar
-# For adapter-static, you'd copy to a folder Flask serves
-# COPY --from=frontend-builder /app/frontend/build ./static/dist
+# Copy built frontend from Stage 1 into Flask static folder
+COPY --from=frontend-builder /app/frontend/build ./static
 
-# Expose ports for both Flask and potentially MCP
+# Expose ports (Flask / SocketIO)
 EXPOSE 5000
 
-# Default command
-CMD ["python", "run.py", "--host", "0.0.0.0"]
+# Default command: run the production server
+# Note: In true production, you might use gunicorn:
+# CMD ["gunicorn", "--worker-class", "gevent", "-w", "1", "run:application", "-b", "0.0.0.0:5000"]
+CMD ["python", "run.py", "--host", "0.0.0.0", "--port", "5000"]

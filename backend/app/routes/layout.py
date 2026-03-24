@@ -61,8 +61,14 @@ def _compute_layout(nodes, edges, direction='LR', node_spacing=80, rank_spacing=
         roots = [min(node_ids, key=lambda nid: len(parents[nid]))]
     
     # BFS from roots to assign ranks, with cycle protection
-    queue = deque([(r, 0) for r in roots])
-    ranks = {r: 0 for r in roots}
+    # Special: if there are many roots, distribute them into multiple ranks to avoid giant columns
+    ranks = {}
+    queue = deque()
+    for i, r in enumerate(roots):
+        rank = i // 8 # 8 nodes per column for roots
+        ranks[r] = rank
+        queue.append((r, rank))
+    
     visited_count = {r: 1 for r in roots}
     max_nodes = len(node_ids)
     
@@ -120,47 +126,92 @@ def _compute_layout(nodes, edges, direction='LR', node_spacing=80, rank_spacing=
     # --- Step 4: Assign coordinates ---
     positions = {}
     
-    # Calculate max node dimensions per rank for spacing
-    for rank in sorted_ranks:
-        group = rank_groups[rank]
-        
-        # Calculate total height of this rank's nodes
-        node_heights = []
-        for nid in group:
-            n = node_map[nid]
-            h = max(n.get('height', 60), 60)
-            w = max(n.get('width', 220), 160)
-            node_heights.append((nid, w, h))
-        
-        total_height = sum(h for _, _, h in node_heights) + node_spacing * (len(group) - 1)
-        
-        # Center the group vertically
-        start_y = -total_height / 2
-        
-        current_y = start_y
-        for nid, w, h in node_heights:
-            if direction == 'LR':
-                x = rank * rank_spacing + 100
-                y = current_y + 200  # offset so nothing is at negative coords
-            else:  # TB
-                x = current_y + 600  # center horizontally with offset
-                y = rank * rank_spacing + 100
-            
-            positions[nid] = (round(x, 1), round(y, 1))
-            current_y += h + node_spacing
+    # Track occupied offsets per rank/axis
+    rank_axis_offsets = {} # rank -> starting x/y for this column/row
     
-    # --- Step 5: Shift all positions so minimum is at a reasonable origin ---
+    if direction == 'LR':
+        current_rank_offset = 100
+        for rank in sorted_ranks:
+            group = rank_groups[rank]
+            rank_axis_offsets[rank] = current_rank_offset
+            
+            # Find max width in this rank and add to offset for next rank
+            max_w = 0
+            node_dims = []
+            for nid in group:
+                n = node_map[nid]
+                # Estimation for DB Tables or other auto-sizing nodes
+                w = n.get('width', 240) or 240
+                h = n.get('height', 120) or 120
+                
+                if n.get('node_type') == 'db_table' or n.get('node_type') == 'table':
+                    meta = n.get('meta', {})
+                    cols = meta.get('columns', []) if isinstance(meta, dict) else []
+                    estimated_h = 64 + (len(cols) * 32) + 20
+                    h = max(h, estimated_h)
+                
+                w = max(w, 160)
+                h = max(h, 60)
+                max_w = max(max_w, w)
+                node_dims.append((nid, w, h))
+            
+            # Center vertically
+            # Use larger spacing for deep columns
+            effective_node_spacing = max(node_spacing, 180) 
+            total_h = sum(h for _, _, h in node_dims) + effective_node_spacing * (len(group) - 1)
+            current_v = 0 
+            
+            for nid, w, h in node_dims:
+                positions[nid] = (float(current_rank_offset), float(current_v))
+                current_v += h + effective_node_spacing
+            
+            current_rank_offset += max_w + max(rank_spacing, 350)
+    else: # TB
+        current_rank_offset = 100
+        for rank in sorted_ranks:
+            group = rank_groups[rank]
+            rank_axis_offsets[rank] = current_rank_offset
+            
+            # Find max height in this rank
+            max_h = 0
+            node_dims = []
+            for nid in group:
+                n = node_map[nid]
+                w = n.get('width', 240) or 240
+                h = n.get('height', 120) or 120
+                
+                if n.get('node_type') == 'db_table' or n.get('node_type') == 'table':
+                    meta = n.get('meta', {})
+                    cols = meta.get('columns', []) if isinstance(meta, dict) else []
+                    estimated_h = 64 + (len(cols) * 32) + 20
+                    h = max(h, estimated_h)
+                
+                max_h = max(max_h, h)
+                node_dims.append((nid, w, h))
+            
+            # Center horizontally
+            effective_node_spacing = max(node_spacing, 250)
+            total_w = sum(w for _, _, w in node_dims) + effective_node_spacing * (len(group) - 1)
+            current_v = 0
+            
+            for nid, w, h in node_dims:
+                positions[nid] = (float(current_v), float(current_rank_offset))
+                current_v += w + effective_node_spacing
+            
+            current_rank_offset += max_h + max(rank_spacing, 400)
+
+    # --- Step 5: Final origin shift and normalization ---
     if positions:
         min_x = min(p[0] for p in positions.values())
         min_y = min(p[1] for p in positions.values())
-        offset_x = 80 - min_x if min_x < 80 else 0
-        offset_y = 80 - min_y if min_y < 80 else 0
         
-        if offset_x != 0 or offset_y != 0:
-            positions = {
-                nid: (x + offset_x, y + offset_y)
-                for nid, (x, y) in positions.items()
-            }
+        # Ensure at least 100 padding
+        shift_x = 100 - min_x
+        shift_y = 100 - min_y
+        
+        for nid in positions:
+            x, y = positions[nid]
+            positions[nid] = (round(x + shift_x, 1), round(y + shift_y, 1))
     
     return positions
 
@@ -180,8 +231,8 @@ def auto_layout(pid, did):
     
     body = request.get_json(silent=True) or {}
     direction = body.get('direction', 'LR')
-    node_spacing = int(body.get('node_spacing', 80))
-    rank_spacing = int(body.get('rank_spacing', 280))
+    node_spacing = int(body.get('node_spacing', 100))
+    rank_spacing = int(body.get('rank_spacing', 150))
     
     nodes_list = Node.query.filter_by(diagram_id=did).all()
     edges_list = Edge.query.filter_by(diagram_id=did).all()

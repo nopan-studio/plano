@@ -195,10 +195,9 @@
               value={edge.edge_type}
               onchange={(e) => S.updateEdge(edge.id, { edge_type: e.target.value })}
             >
-              <option value="default">Default / Association</option>
-              <option value="one_to_many">One to Many</option>
-              <option value="one_to_one">One to One</option>
-              <option value="many_to_many">Many to Many</option>
+              {#each (EDGE_TYPES[S.diagram.type] || EDGE_TYPES.process_flow) as et}
+                <option value={et.t}>{et.n}</option>
+              {/each}
             </select>
           </div>
           

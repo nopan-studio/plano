@@ -47,6 +47,17 @@
 
     <div class="tb-mid">
         <div class="tb-group">
+          <button class="btn-tb" onclick={() => S.undo()} disabled={!S.canUndo} title="Undo (Ctrl+Z)">
+            <Icon name="undo" size={18} />
+          </button>
+          <button class="btn-tb" onclick={() => S.redo()} disabled={!S.canRedo} title="Redo (Ctrl+Y)">
+            <Icon name="redo" size={18} />
+          </button>
+        </div>
+
+        <div class="sep"></div>
+
+        <div class="tb-group">
           <button 
               class="btn-tb {S.selMode ? 'active' : ''}" 
               onclick={() => S.selMode = !S.selMode} 

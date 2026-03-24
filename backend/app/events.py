@@ -6,7 +6,7 @@ class SocketEventBus:
         self.socketio = None
 
     def init_app(self, app):
-        self.socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
+        self.socketio = SocketIO(app, cors_allowed_origins="*", async_mode='gevent')
         return self.socketio
 
     def broadcast(self, event_type, data):

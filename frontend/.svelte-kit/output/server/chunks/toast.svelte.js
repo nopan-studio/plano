@@ -1,5 +1,5 @@
 import "clsx";
-import { w as writable } from "./exports.js";
+import { w as writable } from "./index.js";
 function createToast() {
   const { subscribe, update } = writable([]);
   function send(message, type = "ok", duration = 3e3) {

@@ -26,9 +26,16 @@ export class EditorState {
     isDragging = $state(false);
     isConnecting = $state(null); // { source_id, side, col }
     
+    // History
+    history = $state([]);
+    historyIndex = $state(-1);
+    wasMoved = $state(false);
+
     // Derived properties
     selectedNodes = $derived(this.diagram?.nodes?.filter(n => this.selectedNodeIds.includes(n.id)) || []);
-    selectedEdge = $derived(this.diagram?.edges?.find(e => e.id === this.selectedEdgeId));
+    selectedEdge = $derived(this.diagram?.edges?.find(e => e.id === this.selectedEdgeId) || null);
+    canUndo = $derived(this.historyIndex > 0);
+    canRedo = $derived(this.historyIndex < this.history.length - 1);
     nodeMap = $derived(new Map(this.diagram?.nodes?.map(n => [n.id, n]) || []));
 
     // Internal interaction state
@@ -38,11 +45,85 @@ export class EditorState {
         this.pid = pid;
         this.did = did;
         
-        // Svelte 5: $effect is only available during component initialization
-        // or inside other effects. We must be careful how we call it.
         if (typeof window !== 'undefined') {
             this.initListeners();
-            this.load(); // Initial load on client
+            this.load().then(() => {
+                this.saveHistory();
+            });
+        }
+    }
+
+    saveHistory() {
+        // Capture a clean snapshot of nodes and edges
+        const snapshot = JSON.stringify({
+            nodes: this.diagram.nodes.map(n => ({ ...n })),
+            edges: this.diagram.edges.map(e => ({ ...e }))
+        });
+
+        // If same as last, ignore
+        if (this.historyIndex >= 0 && this.history[this.historyIndex] === snapshot) return;
+
+        // Trim future (redo points)
+        this.history = this.history.slice(0, this.historyIndex + 1);
+        this.history.push(snapshot);
+        this.historyIndex++;
+
+        // Cap at 100
+        if (this.history.length > 100) {
+            this.history.shift();
+            this.historyIndex--;
+        }
+    }
+
+    async undo() {
+        if (!this.canUndo) return;
+        this.historyIndex--;
+        const state = JSON.parse(this.history[this.historyIndex]);
+        await this.syncWithTarget(state);
+    }
+
+    async redo() {
+        if (!this.canRedo) return;
+        this.historyIndex++;
+        const state = JSON.parse(this.history[this.historyIndex]);
+        await this.syncWithTarget(state);
+    }
+
+    async syncWithTarget(target) {
+        // 1. Calculate moves & updates
+        const ops = [];
+        target.nodes.forEach(tn => {
+            const current = this.diagram.nodes.find(n => n.id === tn.id);
+            if (current) {
+                if (current.x !== tn.x || current.y !== tn.y || current.width !== tn.width || current.height !== tn.height || current.label !== tn.label) {
+                    ops.push({ 
+                        action: 'update_node', 
+                        id: tn.id, 
+                        x: tn.x, y: tn.y, 
+                        width: tn.width, height: tn.height, 
+                        label: tn.label,
+                        meta: tn.meta
+                    });
+                }
+            }
+        });
+
+        // 2. Add/Delete logic is trickier with backend IDs, 
+        // but for now we'll focus on making the UI match immediately
+        this.diagram.nodes = target.nodes.map(n => ({ ...n }));
+        this.diagram.edges = target.edges.map(e => ({ ...e }));
+
+        // 3. Sync significant changes to backend
+        if (ops.length > 0) {
+            try {
+                await fetch(`/api/projects/${this.pid}/boards/${this.did}/bulk`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ops })
+                });
+            } catch (e) {
+                toast.error("Undo Sync Failed");
+            }
         }
     }
 
@@ -102,10 +183,14 @@ export class EditorState {
 
     onNodeDown(id, e) {
         if (e.button !== 0) return;
-        this.selectNode(id, e.shiftKey, true);
-        this.isDragging = true;
+        this.wasMoved = false;
         
-        const origins = this.selectedNodes.map(n => ({ node: n, x: n.x, y: n.y }));
+        // If not selected, we still want to drag it (and potentially select it)
+        this.isDragging = true;
+        const origins = this.selectedNodeIds.includes(id) 
+            ? this.selectedNodes.map(n => ({ node: n, x: n.x, y: n.y }))
+            : [this.nodeMap.get(id)].map(n => ({ node: n, x: n.x, y: n.y }));
+
         this.drag = {
             type: 'node',
             mx: e.clientX,
@@ -169,12 +254,15 @@ export class EditorState {
         } else if (this.drag.type === 'resize') {
             const node = this.drag.node;
             if (node) {
-                node.width = Math.max(100, this.drag.ow + dx);
-                node.height = Math.max(40, this.drag.oh + dy);
+                node.width = Math.max(120, this.drag.ow + dx);
+                node.height = Math.max(64, this.drag.oh + dy);
             }
         } else if (this.drag.type === 'pan') {
             this.ox = this.drag.ox + (e.clientX - this.drag.mx);
             this.oy = this.drag.oy + (e.clientY - this.drag.my);
+        } else if (this.drag.type === 'conn') {
+            this.drag.cx = e.clientX;
+            this.drag.cy = e.clientY;
         }
     }
 
@@ -182,6 +270,7 @@ export class EditorState {
         if (!this.drag) return;
         
         const drag = this.drag;
+        this.wasMoved = drag.moved;
         this.drag = null;
         this.isPanning = false;
         this.isDragging = false;
@@ -197,16 +286,48 @@ export class EditorState {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ ops })
             });
+            this.saveHistory();
         } else if (drag.type === 'resize') {
-            const node = this.diagram.nodes.find(n => n.id === drag.id);
+            const node = this.diagram.nodes.find(n => n.id === drag.node.id);
             if (node) {
-                this.updateNode(drag.id, { width: node.width, height: node.height });
+                await this.updateNode(node.id, { width: node.width, height: node.height });
+                this.saveHistory();
+            }
+        } else if (drag.type === 'conn') {
+            const el = document.elementFromPoint(e.clientX, e.clientY);
+            const portEl = el?.closest('[data-side]');
+            const nodeEl = el?.closest('.n8n-node');
+            
+            if (nodeEl) {
+                const targetId = parseInt(nodeEl.dataset.id);
+                if (targetId && targetId !== drag.source_id) {
+                    const targetSide = portEl?.dataset.side || 'l';
+                    const targetCol = portEl?.dataset.col !== undefined ? parseInt(portEl.dataset.col) : undefined;
+                    const sourcePort = { side: drag.side, col: drag.col };
+                    const targetPort = { side: targetSide, col: targetCol };
+                    await this.addEdge(drag.source_id, targetId, sourcePort, targetPort);
+                }
             }
         }
     }
 
     onKeyDown(e) {
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        
+        const isMod = e.ctrlKey || e.metaKey;
+        
+        if (isMod && e.key === 'z') {
+            e.preventDefault();
+            if (e.shiftKey) this.redo();
+            else this.undo();
+            return;
+        }
+        if (isMod && e.key === 'y') {
+            e.preventDefault();
+            this.redo();
+            return;
+        }
+
         if (e.key === 'Delete' || e.key === 'Backspace') {
             this.deleteSelected();
         }
@@ -222,22 +343,49 @@ export class EditorState {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
+            this.saveHistory();
+        } catch (e) {}
+    }
+
+    async updateEdge(id, data) {
+        const edge = this.diagram.edges.find(e => e.id === id);
+        if (!edge) return;
+        Object.assign(edge, data);
+        try {
+            await fetch(`/api/projects/${this.pid}/boards/${this.did}/edges/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            this.saveHistory();
         } catch (e) {}
     }
 
     async deleteSelected() {
-        if (this.selectedNodeIds.length) {
-            for (const id of this.selectedNodeIds) {
-                await fetch(`/api/projects/${this.pid}/boards/${this.did}/nodes/${id}`, { method: 'DELETE' });
-                this.diagram.nodes = this.diagram.nodes.filter(n => n.id !== id);
-                this.diagram.edges = this.diagram.edges.filter(e => e.source_id !== id && e.target_id !== id);
-            }
-            this.selectedNodeIds = [];
-        } else if (this.selectedEdgeId) {
-            await fetch(`/api/projects/${this.pid}/boards/${this.did}/edges/${this.selectedEdgeId}`, { method: 'DELETE' });
-            this.diagram.edges = this.diagram.edges.filter(e => e.id !== this.selectedEdgeId);
+        if (this.selectedEdgeId) {
+            this.deleteEdge(this.selectedEdgeId);
             this.selectedEdgeId = null;
+            return;
         }
+        if (this.selectedNodeIds.length === 0) return;
+        this.selectedNodeIds.forEach(id => {
+            const node = this.nodeMap.get(id);
+            if (!node) return;
+            
+            // Delete associated edges
+            this.diagram.edges = this.diagram.edges.filter(e => e.source_id !== id && e.target_id !== id);
+            this.diagram.nodes = this.diagram.nodes.filter(n => n.id !== id);
+            
+            fetch(`/api/projects/${this.pid}/boards/${this.did}/nodes/${id}`, { method: 'DELETE' });
+        });
+        this.selectedNodeIds = [];
+        this.saveHistory();
+    }
+
+    deleteEdge(id) {
+        this.diagram.edges = this.diagram.edges.filter(e => e.id !== id);
+        fetch(`/api/projects/${this.pid}/boards/${this.did}/edges/${id}`, { method: 'DELETE' });
+        this.saveHistory();
     }
 
     async addNode(type, x, y) {
@@ -278,6 +426,7 @@ export class EditorState {
             const n = await resp.json();
             this.diagram.nodes = [...this.diagram.nodes, n];
             this.selectNode(n.id);
+            this.saveHistory();
             return n;
         } catch (e) {
           toast.error('Connection failed');
@@ -309,6 +458,7 @@ export class EditorState {
             });
             const e = await resp.json();
             this.diagram.edges = [...this.diagram.edges, e];
+            this.saveHistory();
             return e;
         } catch (e) {}
     }

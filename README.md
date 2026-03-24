@@ -51,6 +51,16 @@ pip install -r requirements.txt
 python run.py
 ```
 
+**Docker (Recommended for Production/Quick Demo):**
+```bash
+# Build and run using the management script
+./docker-run.sh start
+
+# Or using docker-compose
+docker-compose up -d
+```
+
+
 ### 2. AI Agent Adaptation (Mandatory)
 
 To enable Plano's full project management layer for your AI assistant (Cursor, Windsurf, or Antigravity), you **must** adapt the pre-configured directives. This ensures the AI follows the correct SOPs (Standard Operating Procedures).
@@ -140,11 +150,12 @@ Add the following to your `claude_desktop_config.json` (replacing `/PATH/TO/PLAN
 
 ## Architecture
 
-Plano is built using a lightweight stack:
-- **Backend:** Flask / Python
+Plano is built using a modern, reactive stack:
+- **Backend:** Flask / Python (gevent mode)
 - **Database:** SQLite & SQLAlchemy (`plano.db`)
-- **Frontend:** Vanilla JS / CSS / HTML with no heavy build systems or JS frameworks.
-- **MCP:** Built on FastMCP for quick conversational AI usage.
+- **Frontend:** SvelteKit / Vite / Vanilla CSS (Modern, reactive components)
+- **MCP:** Built on the Model Context Protocol (MCP) for seamless AI integration.
+
 
 ## License
 Copyright (C) 2026 nopan-studio

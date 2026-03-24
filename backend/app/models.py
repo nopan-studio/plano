@@ -17,9 +17,9 @@ NODE_TYPES = {
 }
 
 EDGE_TYPES = {
-    'process_flow': ['default', 'success', 'failure', 'conditional'],
+    'process_flow': ['default', 'success', 'failure', 'conditional', 'run_after', 'run_before'],
     'db_diagram': ['one_to_one', 'one_to_many', 'many_to_many', 'belongs_to'],
-    'flowchart': ['default', 'success', 'failure', 'conditional'],
+    'flowchart': ['default', 'success', 'failure', 'conditional', 'run_after', 'run_before'],
     'idea_map': ['related', 'supports', 'contradicts', 'extends'],
     'function_flow': ['calls', 'returns', 'emits', 'subscribes', 'inherits', 'imports'],
 }

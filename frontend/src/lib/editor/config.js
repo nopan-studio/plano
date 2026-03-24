@@ -74,6 +74,30 @@ export const TYPE_ICONS = {
   process_flow:'process', flowchart:'decision', db_diagram:'db_table', idea_map:'idea', function_flow:'process'
 };
 
+export const EDGE_TYPES = {
+  process_flow: [
+    {t:'default', n:'Association'},
+    {t:'success', n:'Success Path'},
+    {t:'failure', n:'Failure Path'},
+    {t:'conditional', n:'Conditional'},
+    {t:'run_after', n:'Run After'},
+    {t:'run_before', n:'Run Before'},
+  ],
+  flowchart: [
+    {t:'default', n:'Flow'},
+    {t:'success', n:'Yes / True'},
+    {t:'failure', n:'No / False'},
+    {t:'run_after', n:'Next Step'},
+    {t:'run_before', n:'Previous Step'},
+  ],
+  db_diagram: [
+    {t:'one_to_many', n:'One to Many'},
+    {t:'one_to_one', n:'One to One'},
+    {t:'many_to_many', n:'Many to Many'},
+    {t:'belongs_to', n:'Belongs To'},
+  ],
+};
+
 export function getCat(type) { return CAT[type]||CAT.process_flow }
 
 export function getDef(nodeType, diagramType) {

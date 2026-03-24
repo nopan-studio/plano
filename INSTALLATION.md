@@ -11,8 +11,8 @@ Copy the following command block and execute it in your terminal. This will dete
 # Detected OS: Linux/macOS
 python3 -m venv venv && source venv/bin/activate && pip install -r backend/requirements.txt && ./start.sh
 
-# Setup Frontend (In second terminal)
-cd frontend && npm install && npm run dev
+# Docker Setup (Full Stack in Container)
+./docker-run.sh start
 ```
 
 *(If on Windows, use: `python -m venv venv && .\venv\Scripts\activate && pip install -r backend/requirements.txt && cd backend && python run.py` then `cd ../frontend && npm install && npm run dev`)*

@@ -90,6 +90,28 @@
         mx = (e.clientX - br.left - S.ox) / S.scale;
         my = (e.clientY - br.top - S.oy) / S.scale;
     }
+
+    function getPortCoordsForPreview(n, side = 'l', colIdx) {
+        if (!n) return { x: 0, y: 0 };
+        const x = n.x;
+        const y = n.y;
+        const w = n.width || 220;
+        const h = n.height || 60;
+        const isTab = n.node_type === 'db_table' || n.node_type === 'table' || n.node_type === 'view';
+        
+        if (colIdx !== undefined && isTab) {
+            const headerHeight = 64; 
+            const rowHeight = 32;
+            return {
+                x: x + (side === 'r' ? w : 0),
+                y: y + headerHeight + (colIdx * rowHeight) + (rowHeight / 2)
+            };
+        }
+        if (side === 't') return { x: x + w / 2, y: y };
+        if (side === 'b') return { x: x + w / 2, y: y + h };
+        if (side === 'r') return { x: x + w, y: y + h / 2 };
+        return { x: x, y: y + h / 2 };
+    }
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -144,12 +166,17 @@
                 <Edge {edge} />
             {/each}
 
-            {#if S.isConnecting}
-                <!-- Temporary connection line logic here instead of separate component for performance -->
+            {#if S.isConnecting && S.drag?.cx}
+                {@const br = canvasWrap.getBoundingClientRect()}
+                {@const sn = S.nodeMap.get(S.isConnecting.source_id)}
+                {@const sp = getPortCoordsForPreview(sn, S.isConnecting.side, S.isConnecting.col)}
+                {@const tx = (S.drag.cx - br.left - S.ox) / S.scale}
+                {@const ty = (S.drag.cy - br.top - S.oy) / S.scale}
+                {@const ctrl = Math.max(Math.abs(tx - sp.x) * 0.5, 80)}
                 <path 
-                  class="epath" 
-                  d="M 0 0" 
-                  style="visibility: hidden"
+                  class="epath preview" 
+                  d="M {sp.x} {sp.y} C {sp.x + (S.isConnecting.side==='r'?ctrl:(S.isConnecting.side==='l'?-ctrl:0))} {sp.y}, {tx - 50} {ty}, {tx} {ty}" 
+                  stroke-dasharray="4"
                 />
             {/if}
         </svg>

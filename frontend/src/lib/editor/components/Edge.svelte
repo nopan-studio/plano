@@ -35,8 +35,8 @@
                 
                 if (idx !== -1) {
                     // Approximate height for columns: header (~40px) + each row (30px)
-                    const headerHeight = 35; 
-                    const rowHeight = 30;
+                    const headerHeight = 64; 
+                    const rowHeight = 32;
                     return {
                         x: x + (side === 'r' ? w : 0),
                         y: y + headerHeight + (idx * rowHeight) + (rowHeight / 2)
@@ -53,10 +53,17 @@
 
     function getMarker(type, selected) {
         if (selected) return 'url(#m-acc)';
-        if (type === 'success') return 'url(#m-grn)';
-        if (type === 'one_to_many' || type === 'many_to_many') return 'url(#m-pur)';
+        if (type === 'success' || type === 'run_after') return 'url(#m-grn)';
+        if (type === 'one_to_many' || type === 'many_to_many' || type === 'run_before') return 'url(#m-pur)';
         return 'url(#m-def)';
     }
+
+    let displayLabel = $derived.by(() => {
+        if (edge.label) return edge.label;
+        if (edge.edge_type === 'run_after') return 'Run After';
+        if (edge.edge_type === 'run_before') return 'Run Before';
+        return '';
+    });
 
     function onEdgeClick(e) {
         e.stopPropagation();
@@ -72,20 +79,27 @@
         d={pathD}
         marker-end={getMarker(edge.edge_type, isSelected)}
     ></path>
-    {#if edge.label}
+    {#if displayLabel}
         <text 
             class="elabel" 
             x={(sc.x + tc.x) / 2} 
-            y={(sc.y + tc.y) / 2 - 7} 
+            y={(sc.y + tc.y) / 2 - 8} 
             text-anchor="middle"
         >
-            {edge.label}
+            {displayLabel}
         </text>
+    {/if}
+
+    {#if isSelected}
+        <g class="e-menu" transform="translate({(sc.x + tc.x) / 2}, {(sc.y + tc.y) / 2})" onclick={(e) => { e.stopPropagation(); S.deleteEdge(edge.id); }}>
+            <circle r="12" fill="var(--panel)" stroke="var(--accent)" stroke-width="2" style="cursor: pointer; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5))" />
+            <text fill="var(--accent)" font-size="20" font-weight="bold" text-anchor="middle" dominant-baseline="central" pointer-events="none" style="user-select: none">×</text>
+        </g>
     {/if}
 </g>
 
 <style>
-    .eg { cursor: pointer; }
+    .eg { cursor: pointer; outline: none; }
     .epath {
         fill: none;
         stroke: var(--text-dim);
@@ -112,8 +126,8 @@
     @keyframes dash {
         to { stroke-dashoffset: -12; }
     }
-    .et-success { stroke: var(--green); }
-    .et-one_to_many { stroke: var(--purple); }
+    .et-success, .et-run_after { stroke: var(--green); }
+    .et-one_to_many, .et-run_before { stroke: var(--purple); }
     .elabel {
       font-size: 10px;
       fill: var(--text-dim);

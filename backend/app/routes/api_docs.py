@@ -101,18 +101,20 @@ def api_docs():
 # ─── UI Routes (Legacy Redirects) ─────────────────────────────────────────────
 
 @api_docs_bp.route('/')
-@api_docs_bp.route('/projects/<int:pid>')
-@api_docs_bp.route('/projects/<int:pid>/<path:path>')
-@api_docs_bp.route('/ideas')
-@api_docs_bp.route('/project/<int:pid>') 
-def root(pid=None, path=None):
-    """Inform about the new SvelteKit frontend."""
-    return ok({
-        "status": "Plano PM API is running",
-        "frontend": "SvelteKit (typically on port 5173 for development or built in static/ folder)",
-        "api_docs": "/api",
-        "health": "/health"
-    })
+@api_docs_bp.route('/<path:path>')
+def serve_frontend(path=None):
+    """Serve the SvelteKit frontend in production."""
+    import os
+    from flask import send_from_directory
+    # This assumes 'static' is in backend/static
+    static_dir = os.path.join(api_docs_bp.root_path, '../../static')
+    
+    # If file exists in static, serve it directly
+    if path and os.path.exists(os.path.join(static_dir, path)):
+        return send_from_directory(static_dir, path)
+    
+    # Otherwise, serve index.html (SPA mode)
+    return send_from_directory(static_dir, 'index.html')
 
 @api_docs_bp.route('/project/<int:pid>/editor')
 @api_docs_bp.route('/project/<int:pid>/editor/<int:did>')

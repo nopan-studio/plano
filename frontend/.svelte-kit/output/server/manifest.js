@@ -10,7 +10,7 @@ return {
 	assets: new Set([]),
 	mimeTypes: {},
 	_: {
-		client: {start:"_app/immutable/entry/start.Dpzgd1fA.js",app:"_app/immutable/entry/app.BG6lAU-W.js",imports:["_app/immutable/entry/start.Dpzgd1fA.js","_app/immutable/chunks/DZGQz6iQ.js","_app/immutable/chunks/B0E5TfgW.js","_app/immutable/chunks/GPzn8KCs.js","_app/immutable/entry/app.BG6lAU-W.js","_app/immutable/chunks/B0E5TfgW.js","_app/immutable/chunks/QFGvCFO5.js","_app/immutable/chunks/DWZh3_lk.js","_app/immutable/chunks/DW9b6E2G.js","_app/immutable/chunks/kttRfJDI.js","_app/immutable/chunks/GPzn8KCs.js"],stylesheets:[],fonts:[],uses_env_dynamic_public:false},
+		client: {start:"_app/immutable/entry/start.TY2ZDODd.js",app:"_app/immutable/entry/app.CijYA6KB.js",imports:["_app/immutable/entry/start.TY2ZDODd.js","_app/immutable/chunks/LA9Hw9Ku.js","_app/immutable/chunks/BSm2jvCp.js","_app/immutable/chunks/DsXaVp1b.js","_app/immutable/chunks/B2xa8Jvx.js","_app/immutable/entry/app.CijYA6KB.js","_app/immutable/chunks/BSm2jvCp.js","_app/immutable/chunks/BYEUxnYd.js","_app/immutable/chunks/C0GInczg.js","_app/immutable/chunks/B2xa8Jvx.js","_app/immutable/chunks/Dwrf8mUj.js","_app/immutable/chunks/Dk6IBPrv.js","_app/immutable/chunks/BOscoz6C.js","_app/immutable/chunks/z-mEoTOA.js","_app/immutable/chunks/CEmIv-Kz.js","_app/immutable/chunks/DsXaVp1b.js"],stylesheets:[],fonts:[],uses_env_dynamic_public:false},
 		nodes: [
 			__memo(() => import('./nodes/0.js')),
 			__memo(() => import('./nodes/1.js')),
@@ -24,87 +24,89 @@ return {
 			__memo(() => import('./nodes/9.js')),
 			__memo(() => import('./nodes/10.js')),
 			__memo(() => import('./nodes/11.js')),
-			__memo(() => import('./nodes/12.js'))
+			__memo(() => import('./nodes/12.js')),
+			__memo(() => import('./nodes/13.js')),
+			__memo(() => import('./nodes/14.js'))
 		],
 		remotes: {
 			
 		},
 		routes: [
 			{
-				id: "/",
-				pattern: /^\/$/,
+				id: "/(app)",
+				pattern: /^\/?$/,
 				params: [],
-				page: { layouts: [0,], errors: [1,], leaf: 2 },
+				page: { layouts: [0,2,], errors: [1,,], leaf: 4 },
 				endpoint: null
 			},
 			{
-				id: "/ideas",
+				id: "/(app)/ideas",
 				pattern: /^\/ideas\/?$/,
 				params: [],
-				page: { layouts: [0,], errors: [1,], leaf: 3 },
+				page: { layouts: [0,2,], errors: [1,,], leaf: 5 },
 				endpoint: null
 			},
 			{
-				id: "/projects/[id]",
+				id: "/(app)/projects/[id]",
 				pattern: /^\/projects\/([^/]+?)\/?$/,
 				params: [{"name":"id","optional":false,"rest":false,"chained":false}],
-				page: { layouts: [0,], errors: [1,], leaf: 4 },
+				page: { layouts: [0,2,], errors: [1,,], leaf: 6 },
 				endpoint: null
 			},
 			{
-				id: "/projects/[id]/archive",
+				id: "/(app)/projects/[id]/archive",
 				pattern: /^\/projects\/([^/]+?)\/archive\/?$/,
 				params: [{"name":"id","optional":false,"rest":false,"chained":false}],
-				page: { layouts: [0,], errors: [1,], leaf: 5 },
+				page: { layouts: [0,2,], errors: [1,,], leaf: 7 },
 				endpoint: null
 			},
 			{
-				id: "/projects/[id]/boards",
+				id: "/(app)/projects/[id]/boards",
 				pattern: /^\/projects\/([^/]+?)\/boards\/?$/,
 				params: [{"name":"id","optional":false,"rest":false,"chained":false}],
-				page: { layouts: [0,], errors: [1,], leaf: 6 },
+				page: { layouts: [0,2,], errors: [1,,], leaf: 8 },
 				endpoint: null
 			},
 			{
-				id: "/projects/[id]/editor/[did]",
+				id: "/(editor)/projects/[id]/editor/[did]",
 				pattern: /^\/projects\/([^/]+?)\/editor\/([^/]+?)\/?$/,
 				params: [{"name":"id","optional":false,"rest":false,"chained":false},{"name":"did","optional":false,"rest":false,"chained":false}],
-				page: { layouts: [0,], errors: [1,], leaf: 7 },
+				page: { layouts: [0,3,], errors: [1,,], leaf: 14 },
 				endpoint: null
 			},
 			{
-				id: "/projects/[id]/ideas",
+				id: "/(app)/projects/[id]/ideas",
 				pattern: /^\/projects\/([^/]+?)\/ideas\/?$/,
 				params: [{"name":"id","optional":false,"rest":false,"chained":false}],
-				page: { layouts: [0,], errors: [1,], leaf: 8 },
+				page: { layouts: [0,2,], errors: [1,,], leaf: 9 },
 				endpoint: null
 			},
 			{
-				id: "/projects/[id]/milestones",
+				id: "/(app)/projects/[id]/milestones",
 				pattern: /^\/projects\/([^/]+?)\/milestones\/?$/,
 				params: [{"name":"id","optional":false,"rest":false,"chained":false}],
-				page: { layouts: [0,], errors: [1,], leaf: 9 },
+				page: { layouts: [0,2,], errors: [1,,], leaf: 10 },
 				endpoint: null
 			},
 			{
-				id: "/projects/[id]/project-logs",
+				id: "/(app)/projects/[id]/project-logs",
 				pattern: /^\/projects\/([^/]+?)\/project-logs\/?$/,
 				params: [{"name":"id","optional":false,"rest":false,"chained":false}],
-				page: { layouts: [0,], errors: [1,], leaf: 10 },
+				page: { layouts: [0,2,], errors: [1,,], leaf: 11 },
 				endpoint: null
 			},
 			{
-				id: "/projects/[id]/tasks",
+				id: "/(app)/projects/[id]/tasks",
 				pattern: /^\/projects\/([^/]+?)\/tasks\/?$/,
 				params: [{"name":"id","optional":false,"rest":false,"chained":false}],
-				page: { layouts: [0,], errors: [1,], leaf: 11 },
+				page: { layouts: [0,2,], errors: [1,,], leaf: 12 },
 				endpoint: null
 			},
 			{
-				id: "/projects/[id]/updates",
+				id: "/(app)/projects/[id]/updates",
 				pattern: /^\/projects\/([^/]+?)\/updates\/?$/,
 				params: [{"name":"id","optional":false,"rest":false,"chained":false}],
-				page: { layouts: [0,], errors: [1,], leaf: 12 },
+				page: { layouts: [0,2,], errors: [1,,], leaf: 13 },
 				endpoint: null
 			}
 		],

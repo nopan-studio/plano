@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # ─── Plano Docker Management Script ──────────────────────────────────────────
 # Handles: building, running, stopping, and logs for the Docker container.
+# NOTE: This script is for SQLite-only quick starts. Use 'docker-compose' 
+# if you need PostgreSQL support.
 #
 # Usage:
 #   ./docker-run.sh build   → Build the docker image
@@ -28,7 +30,6 @@ case "$1" in
     docker run -d \
       --name $CONTAINER_NAME \
       -p 5000:5000 \
-      -v "$DB_PATH:/app/plano.db" \
       -v "$LOG_PATH:/app/plano.log" \
       --restart unless-stopped \
       $IMAGE_NAME

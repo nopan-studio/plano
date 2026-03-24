@@ -6,8 +6,28 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      - ./backend/plano.db:/app/plano.db
       - ./backend/plano.log:/app/plano.log
     environment:
-      - DATABASE_URL=sqlite:////app/plano.db
+      - DATABASE_URL=postgresql://plano_user:plano_pass@db:5432/plano_db
+    depends_on:
+      db:
+        condition: service_healthy
     restart: unless-stopped
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=plano_user
+      - POSTGRES_PASSWORD=plano_pass
+      - POSTGRES_DB=plano_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U plano_user -d plano_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  pgdata:

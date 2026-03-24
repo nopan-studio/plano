@@ -57,7 +57,6 @@
 
   <div class="sidebar-hd" style="margin-top:16px">
     Workspaces
-    <button class="add-workspace-btn" title="Add Project">+</button>
   </div>
 
   <div class="workspaces-dropdown" class:show={showDropdown}>

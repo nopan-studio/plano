@@ -64,14 +64,16 @@ npm install
 npm run dev
 ```
 
-**Docker (Recommended for Production/Quick Demo):**
-```bash
-# Build and run using the management script
-./docker-run.sh start
+**Docker (Recommended for Production):**
 
-# Or using docker-compose
-docker-compose up -d
-```
+*   **PostgreSQL (Managed):** Use Docker Compose to start both the app and a database.
+    ```bash
+    docker-compose up -d --build
+    ```
+*   **SQLite (Standalone):** Use the management script for a quick, lightweight setup.
+    ```bash
+    ./docker-run.sh start
+    ```
 
 
 ### 2. AI Agent Adaptation (Mandatory)
@@ -173,8 +175,8 @@ Add the following to your `claude_desktop_config.json` (replacing `/PATH/TO/PLAN
 
 Plano is built using a modern, reactive stack:
 - **Backend:** Flask / Python (gevent mode)
-- **Database:** SQLite & SQLAlchemy (`plano.db`)
-- **Frontend:** SvelteKit / Vite / Vanilla CSS (Modern, reactive components)
+- **Database:** SQLite & PostgreSQL via SQLAlchemy
+- **Frontend:** SvelteKit / Vite / Vanilla CSS
 - **MCP:** Built on the Model Context Protocol (MCP) for seamless AI integration.
 
 

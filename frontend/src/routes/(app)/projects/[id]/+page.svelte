@@ -3,6 +3,7 @@
   import { page } from '$app/state';
   import { md, esc, fmtDate, timeAgo } from '$lib/utils';
 import { addRealtimeHandler } from '$lib/realtime.svelte';
+import ProjectModal from '$lib/components/ProjectModal.svelte';
 
   let project = $state({});
   let stats = $state({});
@@ -71,15 +72,13 @@ import { addRealtimeHandler } from '$lib/realtime.svelte';
   }
 
   let showEditModal = $state(false);
-  let editData = $state({});
 
   function openEdit() {
-    editData = { name: project.name, description: project.description, progress_pct: project.progress_pct };
     showEditModal = true;
   }
 
   async function saveEdit() {
-    await patchProject(editData);
+    await patchProject(project);
     showEditModal = false;
   }
 </script>
@@ -238,39 +237,13 @@ import { addRealtimeHandler } from '$lib/realtime.svelte';
       </div>
     </div>
   </div>
-{/if}
 
-{#if showEditModal}
-  <div class="detail-overlay" role="button" tabindex="-1" onclick={e => e.target === e.currentTarget && (showEditModal = false)} onkeydown={e => e.key === 'Escape' && (showEditModal = false)}>
-    <div class="detail-modal animate-in">
-      <div class="dm-header">
-        <div class="dm-header-icon">📁</div>
-        <div class="dm-header-body">
-          <h2>Edit Project</h2>
-          <div class="dm-meta"><span class="badge s-{project.status}">{project.status}</span></div>
-        </div>
-        <button class="dm-close" onclick={() => showEditModal = false}>✕</button>
-      </div>
-      <div class="dm-body">
-        <div class="dm-field-row">
-          <div class="dm-field">
-            <label for="edit-project-name" class="dm-section-label">Project Name</label>
-            <input id="edit-project-name" type="text" bind:value={editData.name}>
-          </div>
-          <div class="dm-field">
-            <label for="edit-project-progress" class="dm-section-label">Progress (%)</label>
-            <input id="edit-project-progress" type="number" bind:value={editData.progress_pct} min="0" max="100" class="full">
-          </div>
-        </div>
-        <div class="dm-section">
-          <label for="edit-project-desc" class="dm-section-label">Description</label>
-          <textarea id="edit-project-desc" bind:value={editData.description} style="min-height:120px"></textarea>
-        </div>
-      </div>
-      <div class="dm-footer">
-        <button class="btn btn-out btn-sm" onclick={() => showEditModal = false}>Cancel</button>
-        <button class="btn btn-acc btn-sm" onclick={saveEdit}>Save Changes</button>
-      </div>
-    </div>
-  </div>
+  {#if showEditModal}
+    <ProjectModal 
+      bind:project={project} 
+      onClose={() => showEditModal = false} 
+      onSave={saveEdit} 
+      isNew={false}
+    />
+  {/if}
 {/if}

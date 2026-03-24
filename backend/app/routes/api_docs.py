@@ -137,7 +137,15 @@ def tester():
 def health():
     try:
         from app import db
+        # Use execute to ensure connection is alive
         db.session.execute(db.text('SELECT 1'))
-        return ok({'status': 'ok', 'db': 'ok'})
+        # Get engine name: 'sqlite', 'postgresql', etc.
+        engine_name = db.engine.name 
+        return ok({
+            'status': 'ok', 
+            'db': 'ok', 
+            'engine': engine_name,
+            'url_scheme': db.engine.url.drivername
+        })
     except Exception as ex:
         return jsonify({'status': 'error', 'detail': str(ex)}), 500

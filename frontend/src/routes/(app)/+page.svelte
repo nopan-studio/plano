@@ -1,8 +1,17 @@
 <script>
   import { onMount } from 'svelte';
+  import { toast } from '$lib/toast.svelte';
+  import ProjectModal from '$lib/components/ProjectModal.svelte';
 
   let projects = $state([]);
   let loading = $state(true);
+  let showModal = $state(false);
+  let newProject = $state({
+    name: '',
+    description: '',
+    status: 'planning',
+    priority: 'medium'
+  });
 
   let totalTasks = $derived(projects.reduce((s, p) => s + (p.task_count || 0), 0));
   let totalActive = $derived(projects.filter(p => p.status === 'active').length);
@@ -19,6 +28,36 @@
     }
   }
 
+  async function handleCreate(result) {
+    if (result && result.project) {
+      // Direct update from import
+      projects = [result.project, ...projects];
+      showModal = false;
+      return;
+    }
+
+    try {
+      const resp = await fetch('/api/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newProject)
+      });
+      
+      if (resp.ok) {
+        const res = await resp.json();
+        toast.success(`Project "${newProject.name}" created!`);
+        showModal = false;
+        newProject = { name: '', description: '', status: 'planning', priority: 'medium' };
+        projects = [res, ...projects];
+      } else {
+        const err = await resp.json();
+        toast.error(err.error || "Failed to create project");
+      }
+    } catch (e) {
+      toast.error("Network error creating project");
+    }
+  }
+
   onMount(fetchData);
 </script>
 
@@ -27,11 +66,25 @@
     <h1>Dashboard</h1>
     <div class="sub">Comprehensive view of all active workspaces and team velocity</div>
   </div>
-  <button class="btn btn-acc btn-sm" style="margin-left:auto">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px"><path d="M12 5v14M5 12h14"/></svg> 
-    New Project
-  </button>
+  <div style="display:flex; gap:8px; margin-left:auto">
+    <button class="btn btn-out btn-sm" onclick={() => { showModal = true; /* the modal has the import button inside */ }}>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Import
+    </button>
+    <button class="btn btn-acc btn-sm" onclick={() => showModal = true}>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px"><path d="M12 5v14M5 12h14"/></svg> 
+      New Project
+    </button>
+  </div>
 </div>
+
+{#if showModal}
+  <ProjectModal 
+    bind:project={newProject} 
+    onClose={() => showModal = false} 
+    onSave={handleCreate} 
+  />
+{/if}
 
 <div class="stat-row">
   <div class="stat">

@@ -198,6 +198,6 @@
 
 <style>
   .ncol {
-    min-height: 28px;
+    height: 32px;
   }
 </style>

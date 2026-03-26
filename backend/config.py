@@ -10,17 +10,23 @@ class Config:
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
     
     if not SQLALCHEMY_DATABASE_URI:
-        # Build PostgreSQL connection string from individual variables
-        driver = os.environ.get('DB_DRIVER', 'postgresql')
-        user = os.environ.get('DB_USER', 'plano_user')
-        pw = os.environ.get('DB_PASS', 'plano_pass')
-        host = os.environ.get('DB_HOST', 'localhost') 
-        port = os.environ.get('DB_PORT', '5432')
-        name = os.environ.get('DB_NAME', 'plano_db')
+        # Build connection string from driver type
+        driver = os.environ.get('DB_DRIVER', 'postgresql').lower()
         
-        # Ensure we use a postgres-compatible scheme
-        scheme = "postgresql+psycopg2" if "postgresql" in driver else driver
-        SQLALCHEMY_DATABASE_URI = f"{scheme}://{user}:{pw}@{host}:{port}/{name}"
+        if driver == 'sqlite':
+            # SQLite uses a simple file path
+            db_path = os.path.join(BASE_DIR, 'plano.db')
+            SQLALCHEMY_DATABASE_URI = f"sqlite:///{db_path}"
+        else:
+            # PostgreSQL requires full credentials
+            user = os.environ.get('DB_USER', 'plano_user')
+            pw = os.environ.get('DB_PASS', 'plano_pass')
+            host = os.environ.get('DB_HOST', 'localhost') 
+            port = os.environ.get('DB_PORT', '5432')
+            name = os.environ.get('DB_NAME', 'plano_db')
+            
+            scheme = "postgresql+psycopg2" if "postgresql" in driver else driver
+            SQLALCHEMY_DATABASE_URI = f"{scheme}://{user}:{pw}@{host}:{port}/{name}"
     
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     

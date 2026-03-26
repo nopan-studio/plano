@@ -29,7 +29,7 @@ declare module "$app/types" {
 	type MatcherParam<M> = M extends (param : string) => param is (infer U extends string) ? U : string;
 
 	export interface AppTypes {
-		RouteId(): "/(editor)" | "/(app)" | "/" | "/(app)/ideas" | "/(editor)/projects" | "/(app)/projects" | "/(editor)/projects/[id]" | "/(app)/projects/[id]" | "/(app)/projects/[id]/archive" | "/(app)/projects/[id]/boards" | "/(editor)/projects/[id]/editor" | "/(editor)/projects/[id]/editor/[did]" | "/(app)/projects/[id]/ideas" | "/(app)/projects/[id]/milestones" | "/(app)/projects/[id]/project-logs" | "/(app)/projects/[id]/tasks" | "/(app)/projects/[id]/updates";
+		RouteId(): "/(editor)" | "/(app)" | "/" | "/(app)/dashboard" | "/(app)/ideas" | "/login" | "/(editor)/projects" | "/(app)/projects" | "/(editor)/projects/[id]" | "/(app)/projects/[id]" | "/(app)/projects/[id]/archive" | "/(app)/projects/[id]/boards" | "/(editor)/projects/[id]/editor" | "/(editor)/projects/[id]/editor/[did]" | "/(app)/projects/[id]/ideas" | "/(app)/projects/[id]/milestones" | "/(app)/projects/[id]/project-logs" | "/(app)/projects/[id]/settings" | "/(app)/projects/[id]/tasks" | "/(app)/projects/[id]/updates" | "/register";
 		RouteParams(): {
 			"/(editor)/projects/[id]": { id: string };
 			"/(app)/projects/[id]": { id: string };
@@ -40,6 +40,7 @@ declare module "$app/types" {
 			"/(app)/projects/[id]/ideas": { id: string };
 			"/(app)/projects/[id]/milestones": { id: string };
 			"/(app)/projects/[id]/project-logs": { id: string };
+			"/(app)/projects/[id]/settings": { id: string };
 			"/(app)/projects/[id]/tasks": { id: string };
 			"/(app)/projects/[id]/updates": { id: string }
 		};
@@ -47,7 +48,9 @@ declare module "$app/types" {
 			"/(editor)": { id?: string; did?: string };
 			"/(app)": { id?: string };
 			"/": { id?: string; did?: string };
+			"/(app)/dashboard": Record<string, never>;
 			"/(app)/ideas": Record<string, never>;
+			"/login": Record<string, never>;
 			"/(editor)/projects": { id?: string; did?: string };
 			"/(app)/projects": { id?: string };
 			"/(editor)/projects/[id]": { id: string; did?: string };
@@ -59,8 +62,10 @@ declare module "$app/types" {
 			"/(app)/projects/[id]/ideas": { id: string };
 			"/(app)/projects/[id]/milestones": { id: string };
 			"/(app)/projects/[id]/project-logs": { id: string };
+			"/(app)/projects/[id]/settings": { id: string };
 			"/(app)/projects/[id]/tasks": { id: string };
-			"/(app)/projects/[id]/updates": { id: string }
+			"/(app)/projects/[id]/updates": { id: string };
+			"/register": Record<string, never>
 		};
 		Pathname(): "/" | "/ideas" | `/projects/${string}` & {} | `/projects/${string}/archive` & {} | `/projects/${string}/boards` & {} | `/projects/${string}/editor/${string}` & {} | `/projects/${string}/ideas` & {} | `/projects/${string}/milestones` & {} | `/projects/${string}/project-logs` & {} | `/projects/${string}/tasks` & {} | `/projects/${string}/updates` & {};
 		ResolvedPathname(): `${"" | `/${string}`}${ReturnType<AppTypes['Pathname']>}`;

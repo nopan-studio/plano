@@ -1,4 +1,4 @@
-# Plano Project Oversight Directive
+# Project Oversight Directive
 
 Always use **Plano MCP tools** to track tasks, progress, and updates when the user asks about this project's health, tasks, or status.
 
@@ -9,17 +9,17 @@ To provide a consolidated, real-time overview of the project's development progr
 Use this directive when the following keywords or intent are identified:
 - "Check task", "How is it going?", "What's left?", "Progress", "Status", "Todo list".
 - Queries about milestones, recent changes, or project summaries.
-- "Execute task", "Do task", "Perform next task", "Work on tasks".
+- "Execute task", "Do task", "Perform next task", "Work on tasks", "Review tasks".
 
 ## Tooling Constraints
 - **No Destructive Operations**: You are STRICTLY FORBIDDEN from performing any `rm -rf` operations on the root project, `frontend/`, `src/`, or any other significant portion of the codebase unless the user explicitly and verbatim requests it.
 - **Plano Integration**: Use Plano MCP tools for all project management actions (tasks, milestones, etc.).
-- **No `%SAME%` Placeholder in MCP Tools**: When using `mcp_plano_update_task` or any other Plano MCP tool, **NEVER** pass the literal string `"%SAME%"` for fields like `title`, `description`, etc. The `%SAME%` placeholder is exclusively for the `task_boundary` UI tool.
+- **No `%SAME%` Placeholder in MCP Tools**: When using `mcp_plano_update_task` or any other Plano MCP tool, **NEVER** pass the literal string `"%SAME%"` for fields like `title`, `description`, etc.
 
 ## Procedure
 1.  **Identify Project**: 
     - At the start of a session (or if current project is uncertain), call `mcp_plano_list_projects`.
-    - Select the `project_id` matching your workspace context (e.g., in `/plano/`, select "Plano").
+    - Select the `project_id` matching your workspace context (e.g., "Plano" for this repository).
     - **Optimization**: If a project ID was already identified in the conversation history, you can proceed by calling technical tools (dashboard/tasks) directly, but verify by including the project identifier in your report.
     - **No Hesitation**: Do NOT verbalize your internal debate about which tool to call first. Bundle necessary listing and fetching tools in a single turn.
 
@@ -49,7 +49,7 @@ When tasked with performing a task from Plano or when a new milestone is created
 5.  **Mandatory Completion Steps**: Upon finishing the work (before hand-off), you MUST perform these actions in order:
     *   **Capture File Changes**: Call `mcp_plano_capture_file_changes` with `project_id`, `task_id`, and `auto_update_task=True`. This is CRITICAL for documenting exactly which files were affected.
     *   **Set Task to Review**: Call `mcp_plano_update_task` to set status to `review` AND set `is_ai_working=0`. **Removing the AI working status is mandatory.** You are PROHIBITED from using the `done` status here unless specifically requested.
-    *   **Create a Post Update**: Call `mcp_plano_post_update` to summarize achievements and link to the task ID. Follow the detailed format specified in [plano_post_update_standard.md](directives/plano_post_update_standard.md). **This step is MANDATORY and cannot be bypassed under any circumstances.**
+    *   **Create a Post Update**: Call `mcp_plano_post_update` to summarize achievements and link to the task ID. Follow the detailed format specified in `directives/PLANO_POST_UPDATE_STANDARD.md`. **This step is MANDATORY and cannot be bypassed under any circumstances.**
 6.  **Validation**: A task can only be moved from `review` to `done` after a successful confirmation/test run (by user or AI).
 7.  **Final Response**: After posting the update, DO NOT summarize the work in the chat. Instead, provide the final response exactly as: "Task #[task_id] is done and update is posted in Plano." Then wait for further instructions.
 

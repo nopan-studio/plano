@@ -12,6 +12,7 @@
     status: 'planning',
     priority: 'medium'
   });
+  let systemHealth = $state(null);
 
   let totalTasks = $derived(projects.reduce((s, p) => s + (p.task_count || 0), 0));
   let totalActive = $derived(projects.filter(p => p.status === 'active').length);
@@ -25,6 +26,17 @@
       console.error("Failed to fetch projects", e);
     } finally {
       loading = false;
+    }
+  }
+
+  async function fetchHealth() {
+    try {
+      const resp = await fetch('/health');
+      if (resp.ok) {
+        systemHealth = await resp.json();
+      }
+    } catch (e) {
+      console.error("Failed to fetch health info", e);
     }
   }
 
@@ -58,7 +70,10 @@
     }
   }
 
-  onMount(fetchData);
+  onMount(() => {
+    fetchData();
+    fetchHealth();
+  });
 </script>
 
 <div class="page-hd">
@@ -106,6 +121,19 @@
     <div style="color:var(--accent);margin-bottom:8px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg></div>
     <div class="stat-v">{totalTasks}</div>
     <div class="stat-l">Total Tasks</div>
+  </div>
+  <div class="stat">
+    <div style="color:var(--amber);margin-bottom:8px">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+        <path d="M3 5V19A9 3 0 0 0 21 19V5"></path>
+        <path d="M3 12A9 3 0 0 0 21 12"></path>
+      </svg>
+    </div>
+    <div class="stat-v" style="color:var(--amber); text-shadow:0 0 15px var(--amber-dim); font-size: 18px; margin-top: 10px;">
+      {systemHealth ? (systemHealth.engine === 'postgresql' ? 'PostgreSQL' : 'SQLite') : '...'}
+    </div>
+    <div class="stat-l">Database</div>
   </div>
 </div>
 

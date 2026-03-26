@@ -1,0 +1,16 @@
+backend/plano.db
+backend/plano.log
+frontend/node_modules
+frontend/dist
+frontend/build
+.git
+.idea
+.vscode
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.env
+.pytest_cache
+.coverage
+htmlcov

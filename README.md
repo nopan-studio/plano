@@ -8,6 +8,7 @@ It features built-in visual diagrams alongside standard task tracking so your ar
 ## Features
 
 - **Project & Task Management**: A full project tracking system with milestones, tasks (kanban/list views), tags, and updates.
+- **Agent-Led Architecture (3-Layer)**: Designed from the ground up to be operated by AI assistants with structured SOPs (Directives), Orchestration, and Execution layers.
 - **Overhauled Visual Boards**: A completely rebuilt high-fidelity editor for diagrams (Process Flows, DB Diagrams, Flowcharts) with reactive state and intelligent auto-layout.
 - **Relational DB Visualization**: Rich metadata schema for database nodes, including columns, types, and primary/foreign keys.
 - **MCP Native Integration**: Built from the ground up to be easily operated via the Model Context Protocol (MCP).
@@ -66,13 +67,9 @@ npm run dev
 
 **Docker (Recommended for Production):**
 
-*   **PostgreSQL (Managed):** Use Docker Compose to start both the app and a database.
+*   **Full Stack Deployment:** Use Docker Compose to start both the app and the managed PostgreSQL database.
     ```bash
     docker-compose up -d --build
-    ```
-*   **SQLite (Standalone):** Use the management script for a quick, lightweight setup.
-    ```bash
-    ./docker-run.sh start
     ```
 
 
@@ -82,7 +79,8 @@ To enable Plano's full project management layer for your AI assistant (Cursor, W
 
 1.  **Read the Instructions**: Open [AGENTS.md](AGENTS.md) and review the 3-Layer Architecture.
 2.  **Configure Rules**: Copy the contents of [AGENTS.md](AGENTS.md) AND the contents of the `directives/` folder into your agent's core rules (e.g., `.cursorrules`, `.windsurfrules`, or project settings).
-3.  **Verify Setup**: Ask the AI: *"What is the Plano project oversight directive?"*. If it explains the tool-calling rules, the setup is successful.
+3.  **Third-Party Projects**: If you want to use Plano's agentic workflow in **other projects**, use the pre-configured templates in the [`optional/`](optional/) folder. These provide generic versions of the directives and instructions ready for immediate installation.
+4.  **Verify Setup**: Ask the AI: *"What is the Plano project oversight directive?"*. If it explains the tool-calling rules, the setup is successful.
 
 ### 3. Quick Links
 - **Dashboard**: `http://localhost:5173/` (Frontend)
@@ -94,42 +92,51 @@ To enable Plano's full project management layer for your AI assistant (Cursor, W
 
 Plano includes a native MCP (Model Context Protocol) server that allows AI assistants to directly manage your projects and diagrams.
 
-### Quick Install (AI-Driven)
+### 1. NPM Installation (Recommended)
+You can run the Plano MCP server directly using `npx`. This is the easiest way to get started and ensures you're always using the latest version.
+
+**Claude Desktop Configuration:**
+Add the following to your `claude_desktop_config.json` (replacing `/PATH/TO/PLANO` with the absolute path to this project):
+
+```json
+{
+  "mcpServers": {
+    "plano": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "plano-mcp",
+        "--path",
+        "/PATH/TO/PLANO"
+      ]
+    }
+  }
+}
+```
+
+> [!NOTE]
+> Ensure you replace `/PATH/TO/PLANO` with the **absolute path** to where you cloned this repository.
+
+### 2. Auto-Discovery
 If you are using an AI assistant that supports MCP auto-discovery (like Antigravity or Windsurf), copy the absolute path to this project and tell the AI:
 > `{{PATH}} install this mcp tool`
 
-### Manual Configuration (Claude Desktop)
-Add the following to your `claude_desktop_config.json` (replacing `/PATH/TO/PLANO` with the absolute path to this project):
-
-**Linux / macOS:**
-```json
-{
-  "mcpServers": {
-    "plano": {
-      "command": "/PATH/TO/PLANO/venv/bin/python",
-      "args": ["/PATH/TO/PLANO/backend/mcp_server.py"]
-    }
-  }
-}
-```
-
-**Windows:**
-```json
-{
-  "mcpServers": {
-    "plano": {
-      "command": "C:\\PATH\\TO\\PLANO\\venv\\Scripts\\python.exe",
-      "args": ["C:\\PATH\\TO\\PLANO\\backend\\mcp_server.py"]
-    }
-  }
-}
-```
-
-*Note: The MCP server automatically manages the lifecycle of the Flask backend. On the first tool call, it will start the backend on port 5050 if it isn't already running.*
 
 ## Recent Changes (Changelog)
 
-- **v2.6.0** (Current):
+- **v2.8.0** (Current):
+  - **Exclusive PostgreSQL Strategy**: Completely removed legacy SQLite support in favor of a managed PostgreSQL container environment for both development and production.
+  - **Docker Engine Consolidation**: Deprecated the `docker-run.sh` script in favor of a unified `docker-compose.yml` workflow, exposing port 5432 for external database management.
+  - **Migration & Portability**: Added `backend/migrate_db.py` to facilitate seamless data transitions from legacy SQLite files into the new persistent PostgreSQL volumes.
+  - **Unified Configuration**: Streamlined `backend/config.py` to exclusively prioritize environment-based PostgreSQL connection strings.
+
+- **v2.7.0**:
+  - **Optional Installation Kit**: Created a standalone `/optional` directory with generic templates (`AGENTS.md`, `directives/`) for easy installation into any third-party project.
+  - **Standardized Capitalization**: Migrated all project documentation and agent directives to a consistent ALL CAPS naming convention (e.g., `AGENTS.md`, `PLANO_PROJECT_OVERSIGHT.md`) for improved visibility.
+  - **Generic Directive Refinement**: Overhauled agent SOPs to remove project-specific hardcoding, making the 3-layer architecture truly portable between different codebases.
+  - **Design Strategy Unification**: Synchronized the core `DESIGN.md` with the new Agent-Led Design Strategy, emphasizing the separation of intent from execution.
+
+- **v2.6.0**:
   - **Unified Workspace Structure**: Migrated all core logic into a clean `/backend` and `/frontend` directory structure.
   - **Gevent Performance Boost**: Replaced `eventlet` with `gevent` for significant performance improvements and better SocketIO stability.
   - **Docker Engine Revamp**: Introduced a unified `docker-run.sh` management script and optimized `docker-compose` for full-stack deployments.
@@ -175,7 +182,7 @@ Add the following to your `claude_desktop_config.json` (replacing `/PATH/TO/PLAN
 
 Plano is built using a modern, reactive stack:
 - **Backend:** Flask / Python (gevent mode)
-- **Database:** SQLite & PostgreSQL via SQLAlchemy
+- **Database:** PostgreSQL via SQLAlchemy
 - **Frontend:** SvelteKit / Vite / Vanilla CSS
 - **MCP:** Built on the Model Context Protocol (MCP) for seamless AI integration.
 

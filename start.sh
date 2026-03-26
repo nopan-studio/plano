@@ -80,12 +80,12 @@ else
 fi
 
 # ── Check dependencies ─────────────────────────────────────────────────────────
-python -c "import flask, flask_sqlalchemy, flask_cors, socketio, gevent" 2>/dev/null || {
-  echo "Installing backend dependencies..."
+python -c "import flask, flask_sqlalchemy, flask_cors, socketio, gevent, psycopg2" 2>/dev/null || {
+  echo "Installing backend dependencies (including PostgreSQL drivers)..."
   if [[ -f "backend/requirements.txt" ]]; then
     pip install -r backend/requirements.txt -q
   else
-    pip install flask flask-sqlalchemy flask-cors flask-socketio gevent gevent-websocket -q
+    pip install flask flask-sqlalchemy flask-cors flask-socketio gevent gevent-websocket psycopg2-binary -q
   fi
 }
 

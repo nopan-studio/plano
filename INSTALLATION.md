@@ -26,9 +26,10 @@ npm install
 npm run dev
 ```
 
-### Docker Setup (Full Stack in Container)
+### Docker Setup (PostgreSQL Managed)
 ```bash
-./docker-run.sh start
+# Start both the Flask app and the managed PostgreSQL database
+docker-compose up -d --build
 ```
 
 ---
@@ -39,8 +40,8 @@ Plano is built with a **3-Layer Architecture** (Directives, Orchestration, Execu
 **Your Goal**: Self-configure your system prompt or project rules with these files:
 
 1.  **Read Core Rules**: [AGENTS.md](AGENTS.md)
-2.  **Read SOPs**: [directives/plano_project_oversight.md](directives/plano_project_oversight.md)
-3.  **Read Update Standards**: [directives/plano_post_update_standard.md](directives/plano_post_update_standard.md)
+2.  **Read SOPs**: [directives/PLANO_PROJECT_OVERSIGHT.md](directives/PLANO_PROJECT_OVERSIGHT.md)
+3.  **Read Update Standards**: [directives/PLANO_POST_UPDATE_STANDARD.md](directives/PLANO_POST_UPDATE_STANDARD.md)
 
 ### 📋 Checklist for the AI Assistant:
 - [ ] I have read `AGENTS.md` and understand the mandatory (Capture -> Update -> Post Update) workflow.
@@ -52,12 +53,26 @@ Plano is built with a **3-Layer Architecture** (Directives, Orchestration, Execu
 ## 🔌 Step 3: MCP Tool Integration
 If you support **MCP (Model Context Protocol)**, you can manage this project's tasks, milestones, and diagrams directly.
 
-**Installation Prompt**:
-> Use the `backend/mcp_server.py` file in this directory to install the Plano MCP tool.
+**Installation (Recommended)**
+You can run the Plano MCP server directly using `npx`. This is the easiest way to get started.
 
-**Manual Config paths**:
-- **Executable**: `{{PROJECT_DIR}}/venv/bin/python` (Unix) or `{{PROJECT_DIR}}/venv/Scripts/python.exe` (Windows)
-- **Script**: `{{PROJECT_DIR}}/backend/mcp_server.py`
+```json
+{
+  "mcpServers": {
+    "plano": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "plano-mcp",
+        "--path",
+        "{{PROJECT_DIR}}"
+      ]
+    }
+  }
+}
+```
+
+
 
 ---
 

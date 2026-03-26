@@ -5,6 +5,12 @@ Usage:
   python migrate_db.py --source sqlite:///plano.db --target postgresql://...
 """
 import argparse
+import os
+import sys
+
+# Ensure the parent directory is in the path so we can import 'app'
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import create_engine, MetaData, select

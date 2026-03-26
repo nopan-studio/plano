@@ -1,4 +1,4 @@
-# Plano Post Update Standard Directive
+# Post Update Standard Directive
 
 This directive defines the mandatory structure and level of detail required for progress updates (Post Updates) made via the `mcp_plano_post_update` tool.
 
@@ -42,6 +42,7 @@ This directive must be followed whenever:
 When using `mcp_plano_post_update`, the `content` field **MUST** be populated using this markdown-formatted structure. 
 If you are resolving a bug task (status `bugs`), you **MUST** ensure the `update_type` argument is set to `"bug_fix"`. For all other task types, default to `"progress"`.
 Use the output from `mcp_plano_capture_file_changes` to populate the "Files Added, Modified, or Deleted" section accurately.
+
 ## Final Response Rule
 To avoid redundant information and keep the conversation concise, the agent **MUST NOT** summarize the work in the chat after successfully calling `mcp_plano_post_update`. 
 
